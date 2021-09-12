@@ -57,7 +57,7 @@ client.on('interactionCreate', async interaction => {
         try {
           await interaction.reply({ content: time(Math.floor(date.getTime() / 1000)) });
         }catch{
-          await interaction.reply({ content: "Error: invalid time" });
+          await interaction.reply({ content: "Error: invalid time", ephemeral: true });
         }
       } else {
         await interaction.reply({
