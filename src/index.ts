@@ -54,7 +54,11 @@ client.on('interactionCreate', async interaction => {
         const datetime = interaction.options.getString('datetime');
         console.log("Lookup: ", timeZoneLookup[val.at(0).timezone])
         const date = chrono.parseDate(datetime, { timezone: timeZoneLookup[val.at(0).timezone] });
-        await interaction.reply({ content: time(Math.floor(date.getTime() / 1000)), });
+        try {
+          await interaction.reply({ content: time(Math.floor(date.getTime() / 1000)) });
+        }catch{
+          await interaction.reply({ content: "Error: invalid time" });
+        }
       } else {
         await interaction.reply({
           content: `Error, you must set a timezone for yourself!\n
