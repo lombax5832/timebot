@@ -20,7 +20,7 @@ const db = mongoose.connection;
 
 const timeZoneLookup = {}
 getTimeZones().forEach((val) => {
-  timeZoneLookup[val.name] = val.abbreviation
+  timeZoneLookup[val.name] = val.currentTimeOffsetInMinutes
 })
 
 // When the client is ready, run this code (only once)
