@@ -8,7 +8,8 @@ import { getTimeZones } from "@vvo/tzdb";
 import { inlineCode, time, userMention } from '@discordjs/builders';
 import * as chrono from 'chrono-node';
 import deployCommands from './deploy-commands';
-import { Client, Intents, MessageActionRow, MessageSelectMenu } from 'discord.js';
+import { Client, Intents, MessageActionRow, MessageEmbed, MessageSelectMenu } from 'discord.js';
+import { chunkArray } from './util';
 
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
@@ -17,6 +18,7 @@ const mongoDB = process.env.DB;
 mongoose.connect(mongoDB);
 const db = mongoose.connection;
 let timezoneListString = '';
+let timezoneListChunks = chunkArray(getTimeZones().map((val) => { return val.name }), 6)
 
 const timeZoneLookup = {}
 getTimeZones().forEach((val) => {
@@ -24,12 +26,17 @@ getTimeZones().forEach((val) => {
   timezoneListString += `${val.name}\n`
 })
 
+const timeZonesEmbed = new MessageEmbed()
+  .setTitle('Timezones List')
+  .addFields(timezoneListChunks.map((val) => { return { name: '\u200B', value: val.join('\n'), inline: true } }))
+
 //const timeZoneList = getTimeZones().map((val) => { return { label: val.name, description: val.abbreviation, value: val.name } })
 
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
   //addUser({ userID: "149597358580039680", timezone: "America/New_York" })
   await deployCommands();
+  console.log(timezoneListString.length)
   console.log('Ready!');
 });
 
@@ -47,7 +54,7 @@ client.on('interactionCreate', async interaction => {
         const datetime = interaction.options.getString('datetime');
         console.log("Lookup: ", timeZoneLookup[val.at(0).timezone])
         const date = chrono.parseDate(datetime, { timezone: timeZoneLookup[val.at(0).timezone] });
-        await interaction.reply({ content: time(Math.floor(date.getTime() / 1000)),  });
+        await interaction.reply({ content: time(Math.floor(date.getTime() / 1000)), });
       } else {
         await interaction.reply({
           content: `Error, you must set a timezone for yourself!\n
@@ -87,15 +94,7 @@ client.on('interactionCreate', async interaction => {
         let chunk = 0
         let timezoneListStringCpy = (' ' + timezoneListString).slice(1)
         let i = 0
-        while (timezoneListStringCpy.length > 0) {
-          chunk = timezoneListStringCpy.length > 2000 ? timezoneListStringCpy.indexOf('\n', 1900) : timezoneListStringCpy.length;
-          if (i == 0)
-            await interaction.reply({ content: timezoneListStringCpy.substring(0, chunk), ephemeral: true })
-          else
-            await interaction.followUp({ content: timezoneListStringCpy.substring(0, chunk), ephemeral: true })
-          timezoneListStringCpy = timezoneListStringCpy.slice(chunk)
-          i++
-        }
+        await interaction.reply({ embeds: [timeZonesEmbed], ephemeral: true })
         break;
     }
   }
