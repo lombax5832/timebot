@@ -1,8 +1,10 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
+import path from 'path';
+
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
-const { clientId, guildId, token } = require('./../config.json');
 
 const commands = [
 	new SlashCommandBuilder().setName('time').setDescription('Converts time into a discord timestamp')
@@ -15,13 +17,13 @@ const commands = [
 ]
 	.map(command => command.toJSON());
 
-const rest = new REST({ version: '9' }).setToken(token);
+const rest = new REST({ version: '9' }).setToken(process.env.CLIENT_TOKEN);
 
 export default async () => {
 	try {
 		await rest.put(
 			//Routes.applicationGuildCommands(clientId, guildId),
-			Routes.applicationCommands(clientId),
+			Routes.applicationCommands(process.env.clientId),
 			{ body: commands },
 		);
 
