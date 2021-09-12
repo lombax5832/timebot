@@ -9,7 +9,7 @@ function addUser(user: { userID: String, timezone: String }): any {
             console.error('addUser Error: ', err);
             return err
         } else {
-            console.log("Product: ", product)
+            //console.log("Product: ", product)
             return product
         }
     })
@@ -31,12 +31,10 @@ async function fetchByUserID(userID: String): Promise<any[]> {
     return promise
 }
 
-const updateQuestion = (req, res) => Timezones.findByIdAndUpdate(req.params.id, req.body, { new: true }, (err, product) => {
-    if (err) {
-        console.log("Error: ", err);
-        res.end("Error");
-    } else {
-        console.log("Product: ", product)
-    }
-})
-export { addUser, updateQuestion, fetchByUserID };
+async function updateUser(user: { userID: String, timezone: String }): Promise<any> {
+    console.log(`Adding user: ${user}`);
+
+
+    return await Timezones.findOneAndUpdate({ userID: user.userID }, { timezone: user.timezone }, { new: true, upsert: true })
+}
+export { addUser, updateUser, fetchByUserID };
