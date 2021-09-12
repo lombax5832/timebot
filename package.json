@@ -1,0 +1,32 @@
+{
+  "name": "timebot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc --pretty",
+    "prestart": "npm run build",
+    "start": "node build/index.js",
+    "deploy commands": "node build/deploy-commands.js"
+  },
+  "author": "Illidra",
+  "license": "ISC",
+  "dependencies": {
+    "@discordjs/builders": "^0.5.0",
+    "@discordjs/rest": "^0.1.0-canary.0",
+    "@vvo/tzdb": "^6.11.0",
+    "axios": "^0.21.3",
+    "chrono-node": "^2.3.1",
+    "discord-api-types": "^0.22.0",
+    "discord.js": "^13.1.0",
+    "dotenv": "^10.0.0",
+    "luxon": "^1.26.0",
+    "moment": "^2.29.1",
+    "moment-timezone": "^0.5.33",
+    "mongoose": "^6.0.5",
+    "typescript": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/luxon": "^2.0.3"
+  }
+}
