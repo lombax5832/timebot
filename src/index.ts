@@ -55,8 +55,9 @@ client.on('interactionCreate', async interaction => {
         console.log("Lookup: ", timeZoneLookup[val.at(0).timezone])
         const date = chrono.parseDate(datetime, { timezone: timeZoneLookup[val.at(0).timezone] });
         try {
-          await interaction.reply({ content: time(Math.floor(date.getTime() / 1000)) });
-        }catch{
+          let timestamp = Math.floor(date.getTime() / 1000);
+          await interaction.reply({ content: time(timestamp) + '\n' + time(timestamp, 'R') });
+        } catch {
           await interaction.reply({ content: "Error: invalid time", ephemeral: true });
         }
       } else {
