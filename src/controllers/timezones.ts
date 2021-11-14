@@ -17,7 +17,7 @@ function addUser(user: { userID: String, timezone: String }): any {
 
 async function fetchByUserID(userID: String): Promise<any[]> {
     const promise = new Promise<Object[]>((resolve, reject) => {
-        console.log(`Searching for userID: ${userID}`);
+        //console.log(`Searching for userID: ${userID}`);
         let response: any = "f";
         Timezones.find({ userID: userID })
             .then(result => {
