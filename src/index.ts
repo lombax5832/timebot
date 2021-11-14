@@ -8,11 +8,11 @@ import { getTimeZones } from "@vvo/tzdb";
 import { inlineCode, time, userMention } from '@discordjs/builders';
 import * as chrono from 'chrono-node';
 import deployCommands from './deploy-commands';
-import { Client, Intents, Message, MessageActionRow, MessageEmbed, MessageSelectMenu } from 'discord.js';
+import { Client, Intents, Message, MessageEmbed } from 'discord.js';
 import { chunkArray } from './util';
 
 // Create a new client instance
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS] });
 
 const mongoDB = process.env.DB;
 mongoose.connect(mongoDB);
@@ -36,7 +36,7 @@ const timeZonesEmbed = new MessageEmbed()
 client.once('ready', async () => {
   //addUser({ userID: "149597358580039680", timezone: "America/New_York" })
   await deployCommands();
-  console.log(timezoneListString.length)
+  //console.log(timezoneListString.length)
   console.log('Ready!');
 });
 
@@ -52,7 +52,7 @@ client.on('interactionCreate', async interaction => {
     fetchByUserID(user.id).then(async val => {
       if (val.length > 0) {
         const datetime = interaction.options.getString('datetime');
-        console.log("Lookup: ", timeZoneLookup[val.at(0).timezone])
+        //console.log("Lookup: ", timeZoneLookup[val.at(0).timezone])
         const date = chrono.parseDate(datetime, { timezone: timeZoneLookup[val.at(0).timezone] });
         try {
           let timestamp = Math.floor(date.getTime() / 1000);
@@ -66,7 +66,7 @@ client.on('interactionCreate', async interaction => {
         Please do so using ${inlineCode('/timezone set <TIMEZONE CODE>')}\nTimezone codes can be found by using ${inlineCode('/timezone list')}')}`, ephemeral: true
         })
       }
-      console.log('Fetched by id:', val)
+      //console.log('Fetched by id:', val)
     })
   }
 
@@ -82,7 +82,7 @@ client.on('interactionCreate', async interaction => {
         Please do so using ${inlineCode('/timezone set <TIMEZONE CODE>')}\nTimezone codes can be found by using ${inlineCode('/timezone list')}')}`, ephemeral: true
             })
           }
-          console.log('Fetched by id:', val)
+          //console.log('Fetched by id:', val)
         })
         break;
       case 'set':
@@ -109,14 +109,14 @@ client.on('messageCreate', async (message: Message) => {
   const { content, author } = message
   fetchByUserID(author.id).then(async val => {
     if (val.length > 0) {
-      console.log("Lookup: ", timeZoneLookup[val.at(0).timezone])
+      //console.log("Lookup: ", timeZoneLookup[val.at(0).timezone])
       const date = chrono.parseDate(content, { timezone: timeZoneLookup[val.at(0).timezone] });
       try {
         let timestamp = Math.floor(date.getTime() / 1000);
         //await message.reply({ content: time(timestamp) + '\n' + time(timestamp, 'R'), ephemeral: true });
-        await message.react(':clock1:')
-        const filter = (reaction, user) => reaction.emoji.name === ':clock1:' && user.id === author.id
-        const collector = message.createReactionCollector({ filter, maxUsers: 1 })
+        message.react('🕐')
+        const filter = (reaction, user) => reaction.emoji.name === '🕐' && user.id === author.id
+        const collector = message.createReactionCollector({ filter, max: 1 })
         collector.on('collect', r => message.reply({ content: time(timestamp) + '\n' + time(timestamp, 'R') }))
       } catch { }
     }
