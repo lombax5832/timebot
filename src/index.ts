@@ -8,7 +8,7 @@ import { getTimeZones } from "@vvo/tzdb";
 import { inlineCode, time, userMention } from '@discordjs/builders';
 import * as chrono from 'chrono-node';
 import deployCommands from './deploy-commands';
-import { Client, Intents, MessageActionRow, MessageEmbed, MessageSelectMenu } from 'discord.js';
+import { Client, Intents, Message, MessageActionRow, MessageEmbed, MessageSelectMenu } from 'discord.js';
 import { chunkArray } from './util';
 
 // Create a new client instance
@@ -104,6 +104,24 @@ client.on('interactionCreate', async interaction => {
     }
   }
 });
+
+client.on('messageCreate', async (message: Message) => {
+  const { content, author } = message
+  fetchByUserID(author.id).then(async val => {
+    if (val.length > 0) {
+      console.log("Lookup: ", timeZoneLookup[val.at(0).timezone])
+      const date = chrono.parseDate(content, { timezone: timeZoneLookup[val.at(0).timezone] });
+      try {
+        let timestamp = Math.floor(date.getTime() / 1000);
+        //await message.reply({ content: time(timestamp) + '\n' + time(timestamp, 'R'), ephemeral: true });
+        await message.react(':clock1:')
+        const filter = (reaction, user) => reaction.emoji.name === ':clock1:' && user.id === author.id
+        const collector = message.createReactionCollector({ filter, maxUsers: 1 })
+        collector.on('collect', r => message.reply({ content: time(timestamp) + '\n' + time(timestamp, 'R') }))
+      } catch { }
+    }
+  })
+})
 
 // Login to Discord with your client's token
 client.login(process.env.CLIENT_TOKEN);
