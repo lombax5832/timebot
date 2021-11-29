@@ -1,8 +1,8 @@
-import Timezones from '../models/timezones';
+import KeywordReact from "../models/keywordReact";
 
-function addUser(user: { userID: String, timezone: String }): any {
+function addKeywordReact(user: { userID: String, keyword: String, react: String }): any {
     console.log(`Adding user: ${user}`);
-    const newuser = new Timezones(user);
+    const newuser = new KeywordReact(user);
 
     newuser.save((err, product) => {
         if (err) {
@@ -15,11 +15,11 @@ function addUser(user: { userID: String, timezone: String }): any {
     })
 }
 
-async function fetchTimezoneByUserID(userID: String): Promise<any[]> {
+async function fetchKeywordReactByUserID(userID: String): Promise<any[]> {
     const promise = new Promise<Object[]>((resolve, reject) => {
         //console.log(`Searching for userID: ${userID}`);
         let response: any = "f";
-        Timezones.find({ userID: userID })
+        KeywordReact.find({ userID: userID })
             .then(result => {
                 resolve(result)
             })
@@ -31,10 +31,4 @@ async function fetchTimezoneByUserID(userID: String): Promise<any[]> {
     return promise
 }
 
-async function updateUser(user: { userID: String, timezone: String }): Promise<any> {
-    console.log(`Adding user: ${user}`);
-
-
-    return await Timezones.findOneAndUpdate({ userID: user.userID }, { timezone: user.timezone }, { new: true, upsert: true })
-}
-export { addUser, updateUser, fetchTimezoneByUserID };
+export { addKeywordReact, fetchKeywordReactByUserID };

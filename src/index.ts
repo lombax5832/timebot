@@ -3,13 +3,14 @@ const path = require('path')
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') }); //initialize dotenv
 
 import mongoose from 'mongoose';
-import { fetchByUserID, updateUser } from './controllers/timezones';
+import { fetchTimezoneByUserID, updateUser } from './controllers/timezones';
 import { getTimeZones } from "@vvo/tzdb";
 import { inlineCode, time, userMention } from '@discordjs/builders';
 import * as chrono from 'chrono-node';
 import deployCommands from './deploy-commands';
 import { Client, Intents, Message, MessageEmbed } from 'discord.js';
 import { chunkArray } from './util';
+import { fetchKeywordReactByUserID } from './controllers/keywordReact';
 
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS] });
@@ -49,7 +50,7 @@ client.on('interactionCreate', async interaction => {
 
   if (commandName === 'time') {
 
-    fetchByUserID(user.id).then(async val => {
+    fetchTimezoneByUserID(user.id).then(async val => {
       if (val.length > 0) {
         const datetime = interaction.options.getString('datetime');
         //console.log("Lookup: ", timeZoneLookup[val.at(0).timezone])
@@ -73,7 +74,7 @@ client.on('interactionCreate', async interaction => {
   if (commandName === 'timezone') {
     switch (interaction.options.getSubcommand()) {
       case 'get':
-        fetchByUserID(user.id).then(async val => {
+        fetchTimezoneByUserID(user.id).then(async val => {
           if (val.length > 0) {
             await interaction.reply({ content: `Your timezone: ${val.at(0).timezone}`, ephemeral: true });
           } else {
@@ -107,7 +108,8 @@ client.on('interactionCreate', async interaction => {
 
 client.on('messageCreate', async (message: Message) => {
   const { content, author } = message
-  fetchByUserID(author.id).then(async val => {
+
+  fetchTimezoneByUserID(author.id).then(async val => {
     if (val.length > 0) {
       //console.log("Lookup: ", timeZoneLookup[val.at(0).timezone])
       const date = chrono.parseDate(content, { timezone: timeZoneLookup[val.at(0).timezone] });
@@ -120,6 +122,14 @@ client.on('messageCreate', async (message: Message) => {
         collector.on('collect', r => message.reply({ content: time(timestamp) + '\n' + time(timestamp, 'R') }))
       } catch { }
     }
+  })
+
+  fetchKeywordReactByUserID(author.id).then(async val => {
+    val.forEach((keyword) => {
+      if (content.includes(keyword.keyword)) {
+        message.react(keyword.reaction)
+      }
+    })
   })
 })
 
