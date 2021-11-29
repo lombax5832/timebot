@@ -126,8 +126,19 @@ client.on('messageCreate', async (message: Message) => {
 
   fetchKeywordReactByUserID(author.id).then(async val => {
     val.forEach((keyword) => {
-      if (content.includes(keyword.keyword)) {
-        message.react(keyword.reaction)
+      let regex: RegExp
+      if (keyword.caseSensitive) {
+        regex = new RegExp(keyword.keyword)
+      }
+      else {
+        regex = new RegExp(keyword.keyword, "i")
+      }
+      if (regex.test(content)) {
+        try {
+          message.react(keyword.reaction)
+        } catch (error) {
+          console.error(error)
+        }
       }
     })
   })
