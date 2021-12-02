@@ -11,6 +11,7 @@ import deployCommands from './deploy-commands';
 import { Client, Intents, Message, MessageEmbed } from 'discord.js';
 import { chunkArray } from './util';
 import { fetchKeywordReactByUserID } from './controllers/keywordReact';
+import { addCommand } from './controllers/commands';
 
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS] });
@@ -103,6 +104,12 @@ client.on('interactionCreate', async interaction => {
         await interaction.reply({ embeds: [timeZonesEmbed], ephemeral: true })
         break;
     }
+  }
+
+  if (commandName === 'add-command') {
+    addCommand({ serverID: interaction.guildId, command: '.' + interaction.options.getString('command'), response: interaction.options.getString('response') })
+    // addCommand({ serverID: interaction.guildId, command: '.sa', response: "a" })
+    interaction.reply({ content: `Command: ${interaction.options.getString('command')} added`, ephemeral: true })
   }
 });
 

@@ -14,6 +14,11 @@ const commands = [
 			.addStringOption(option => option.setName('name').setDescription('Timezone to set').setRequired(true)))
 		.addSubcommand(subcommand => subcommand.setName('get').setDescription('Retrieves your current timezone'))
 		.addSubcommand(subcommand => subcommand.setName('list').setDescription('Lists all valid timezones')),
+	new SlashCommandBuilder().setName('add-command').setDescription('Auto-reply to command with given response')
+		.addStringOption(option => option.setName('command').setDescription('Command to respond to').setRequired(true))
+		.addStringOption(option => option.setName('response').setDescription('What to reply with').setRequired(true)),
+	new SlashCommandBuilder().setName('remove-command').setDescription('Remove a command')
+		.addStringOption(option => option.setName('command').setDescription('Command to respond to').setRequired(true)),
 ]
 	.map(command => command.toJSON());
 
@@ -22,7 +27,7 @@ const rest = new REST({ version: '9' }).setToken(process.env.CLIENT_TOKEN);
 export default async () => {
 	try {
 		await rest.put(
-			//Routes.applicationGuildCommands(clientId, guildId),
+			//Routes.applicationGuildCommands(process.env.clientId, 884303526170333205),
 			Routes.applicationCommands(process.env.clientId),
 			{ body: commands },
 		);

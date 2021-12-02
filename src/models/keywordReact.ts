@@ -1,10 +1,4 @@
 import mongoose, { Schema } from "mongoose";
-import { timeZonesNames } from "@vvo/tzdb";
-
-export interface IUserTimezone extends mongoose.Document {
-    userID: string,
-    timezone: string
-}
 
 const KeywordReactSchema = new Schema({
     userID: { type: String, required: true },
