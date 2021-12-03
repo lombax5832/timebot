@@ -3,22 +3,22 @@ import Commands from '../models/commands';
 function addCommand(command: { serverID: String, command: String, response: String }): any {
     console.log(`Adding Command: ${command.toString()}`);
     const newcommand = new Commands(command);
-
-    newcommand.save((err, product) => {
-        if (err) {
-            console.error('addCommand Error: ', err);
-            return err
-        } else {
-            //console.log("Product: ", product)
-            return product
-        }
-    })
+    Commands.updateOne({ serverID: command.serverID, command: command.command }, { $set: { response: command.response } }, { upsert: true },
+        (err, product) => {
+            if (err) {
+                console.error('addCommand Error: ', err);
+                return err
+            } else {
+                //console.log("Product: ", product)
+                return product
+            }
+        })
 }
 
 function removeCommand(command: { serverID: String, command: String }): any {
-    console.log(`Removing command: ${command}`);
+    console.log(`Removing command: `, command);
 
-    Commands.findOneAndRemove(command)
+    Commands.deleteOne(command)
 }
 
 async function fetchCommandsByServerID(serverID: String): Promise<any[]> {

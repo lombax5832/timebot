@@ -8,4 +8,4 @@ const ServerWhitelistSchema = new Schema({
     versionKey: false
 });
 
-export default mongoose.model('serverWhitelist', ServerWhitelistSchema)
+export default mongoose.model('serverWhitelists', ServerWhitelistSchema)

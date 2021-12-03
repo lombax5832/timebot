@@ -11,7 +11,8 @@ import deployCommands from './deploy-commands';
 import { Client, Intents, Message, MessageEmbed } from 'discord.js';
 import { chunkArray } from './util';
 import { fetchKeywordReactByUserID } from './controllers/keywordReact';
-import { addCommand } from './controllers/commands';
+import { addCommand, fetchCommandsByServerID, removeCommand } from './controllers/commands';
+import { fetchServerWhitelistByServerID } from './controllers/serverWhitelist';
 
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS] });
@@ -107,14 +108,28 @@ client.on('interactionCreate', async interaction => {
   }
 
   if (commandName === 'add-command') {
-    addCommand({ serverID: interaction.guildId, command: '.' + interaction.options.getString('command'), response: interaction.options.getString('response') })
-    // addCommand({ serverID: interaction.guildId, command: '.sa', response: "a" })
-    interaction.reply({ content: `Command: ${interaction.options.getString('command')} added`, ephemeral: true })
+    console.log(`Guild ID = ${interaction.guildId}`)
+    fetchServerWhitelistByServerID(interaction.guildId).then(async val => {
+      if (val != null && val[0].userIDs.includes(interaction.user.id)) {
+        addCommand({ serverID: interaction.guildId, command: '.' + interaction.options.getString('command'), response: interaction.options.getString('response') })
+        interaction.reply({ content: `Command: ${interaction.options.getString('command')} added`, ephemeral: true })
+      }
+    })
+  }
+
+  if (commandName === 'remove-command') {
+    console.log(`Guild ID = ${interaction.guildId}`)
+    fetchServerWhitelistByServerID(interaction.guildId).then(async val => {
+      if (val != null && val[0].userIDs.includes(interaction.user.id)) {
+        removeCommand({ serverID: interaction.guildId, command: '.' + interaction.options.getString('command') })
+        interaction.reply({ content: `Command: ${interaction.options.getString('command')} removed`, ephemeral: true })
+      }
+    })
   }
 });
 
 client.on('messageCreate', async (message: Message) => {
-  const { content, author } = message
+  const { content, author, guildId } = message
 
   fetchTimezoneByUserID(author.id).then(async val => {
     if (val.length > 0) {
@@ -146,6 +161,14 @@ client.on('messageCreate', async (message: Message) => {
         } catch (error) {
           console.error(error)
         }
+      }
+    })
+  })
+
+  fetchCommandsByServerID(guildId).then(async val => {
+    val.forEach((command) => {
+      if (content === command.command) {
+        message.reply(command.response)
       }
     })
   })
