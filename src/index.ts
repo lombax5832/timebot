@@ -109,10 +109,24 @@ client.on('interactionCreate', async interaction => {
 
   if (commandName === 'add-command') {
     console.log(`Guild ID = ${interaction.guildId}`)
+    let hasRole: boolean = false;
+    let users: Array<string> = [];
     fetchServerWhitelistByServerID(interaction.guildId).then(async val => {
-      if (val != null && val[0].userIDs.includes(interaction.user.id)) {
+      if (val != null) {
+        val[0].roleIDs.forEach(roleID => interaction.guild.roles.cache.get(roleID).members.forEach(member => users.push(member.user.id)))
+        console.log("Users: ", users)
+      }
+      if (users.includes(interaction.user.id)) {
+        hasRole = true;
+        console.log("User has role!");
+      } else {
+        console.log("User does not have role!");
+      }
+      if (val != null && (val[0].userIDs.includes(interaction.user.id) || hasRole)) {
         addCommand({ serverID: interaction.guildId, command: '.' + interaction.options.getString('command'), response: interaction.options.getString('response') })
         interaction.reply({ content: `Command: ${interaction.options.getString('command')} added`, ephemeral: true })
+      }else{
+        interaction.reply({ content: `You do not have permissions to add commands.`, ephemeral: true })
       }
     })
   }
