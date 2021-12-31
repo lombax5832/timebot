@@ -8,14 +8,16 @@ import { getTimeZones } from "@vvo/tzdb";
 import { inlineCode, time, userMention } from '@discordjs/builders';
 import * as chrono from 'chrono-node';
 import deployCommands from './deploy-commands';
-import { Client, Intents, Message, MessageEmbed } from 'discord.js';
+import { Client, Intents, Message, MessageEmbed, MessageReaction, User } from 'discord.js';
 import { chunkArray } from './util';
 import { fetchKeywordReactByUserID } from './controllers/keywordReact';
 import { addCommand, fetchCommandsByServerID, removeCommand } from './controllers/commands';
 import { fetchServerWhitelistByServerID } from './controllers/serverWhitelist';
+import { fetchRulesByServerChannelID } from './controllers/channelReactionRules';
+import { IChannelReactionRules } from './models/channelReactionRules';
 
 // Create a new client instance
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS] });
+const client = new Client({ partials: ['USER', 'GUILD_MEMBER', 'CHANNEL', 'MESSAGE', 'REACTION'], intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS] });
 
 const mongoDB = process.env.DB;
 mongoose.connect(mongoDB);
@@ -125,7 +127,7 @@ client.on('interactionCreate', async interaction => {
       if (val != null && (val[0].userIDs.includes(interaction.user.id) || hasRole)) {
         addCommand({ serverID: interaction.guildId, command: '.' + interaction.options.getString('command'), response: interaction.options.getString('response') })
         interaction.reply({ content: `Command: ${interaction.options.getString('command')} added`, ephemeral: true })
-      }else{
+      } else {
         interaction.reply({ content: `You do not have permissions to add commands.`, ephemeral: true })
       }
     })
@@ -185,6 +187,36 @@ client.on('messageCreate', async (message: Message) => {
         message.reply(command.response)
       }
     })
+  })
+})
+
+client.on('messageReactionAdd', async (messageReaction: MessageReaction, user: User) => {
+  const { guildId, channelId } = messageReaction.message;
+  const userId = user.id;
+
+  //Dont mess with our own reactions
+  if (userId == client.user.id)
+    return;
+
+  //console.log(messageReaction.client.user);
+
+  fetchRulesByServerChannelID(guildId, channelId).then(async rules => {
+
+    let rule = rules[0] as IChannelReactionRules
+    if (rules[0] && !rules[0].bossUserIDs.includes(userId)) {
+
+      messageReaction.users.fetch().then(() => {
+
+        messageReaction.message.guild.members.fetch(userId).then(user => {
+          if (user.roles.cache.hasAny(...rule.allowedRoles) && messageReaction.users.cache.hasAny(...rule.bossUserIDs)) {
+
+            console.log("Reaction allowed")
+          } else {
+            messageReaction.users.remove(userId).then(() => console.log("Reaction removed"));
+          }
+        })
+      });
+    }
   })
 })
 
