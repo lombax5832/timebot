@@ -154,7 +154,7 @@ client.on('messageCreate', async (message: Message) => {
       try {
         let timestamp = Math.floor(date.getTime() / 1000);
         //await message.reply({ content: time(timestamp) + '\n' + time(timestamp, 'R'), ephemeral: true });
-        message.react('🕐').then(reaction => setTimeout(() => reaction.remove(), 10000))
+        message.react('🕐').then(reaction => { setTimeout(() => reaction.remove(), 10000) }, rejected => { })
         const filter = (reaction, user) => reaction.emoji.name === '🕐' && user.id === author.id
         const collector = message.createReactionCollector({ filter, max: 1 })
         collector.on('collect', r => message.reply({ content: time(timestamp) + '\n' + time(timestamp, 'R') }))
@@ -205,14 +205,16 @@ client.on('messageReactionAdd', async (messageReaction: MessageReaction, user: U
     let rule = rules[0] as IChannelReactionRules
     if (rules[0] && !rules[0].bossUserIDs.includes(userId)) {
 
+      console.log("start req")
       messageReaction.users.fetch().then(() => {
-
-        messageReaction.message.guild.members.fetch(userId).then(user => {
+        console.log("got req")
+        messageReaction.message.guild.members.cache[userId].then(user => {
+          console.log("got req 2")
           if (user.roles.cache.hasAny(...rule.allowedRoles) && messageReaction.users.cache.hasAny(...rule.bossUserIDs)) {
 
-            console.log("Reaction allowed")
+            //console.log("Reaction allowed")
           } else {
-            messageReaction.users.remove(userId).then(() => console.log("Reaction removed"));
+            messageReaction.users.remove(userId)//.then(() => console.log("Reaction removed"));
           }
         })
       });
