@@ -154,7 +154,11 @@ client.on('messageCreate', async (message: Message) => {
       try {
         let timestamp = Math.floor(date.getTime() / 1000);
         //await message.reply({ content: time(timestamp) + '\n' + time(timestamp, 'R'), ephemeral: true });
-        message.react('🕐').then(reaction => { setTimeout(() => reaction.remove(), 10000) }, rejected => { })
+        message.react('🕐').then(reaction => {
+          setTimeout(() => reaction.remove().catch(rejected => {
+            console.log(rejected);
+          }), 10000)
+        })
         const filter = (reaction, user) => reaction.emoji.name === '🕐' && user.id === author.id
         const collector = message.createReactionCollector({ filter, max: 1 })
         collector.on('collect', r => message.reply({ content: time(timestamp) + '\n' + time(timestamp, 'R') }))
