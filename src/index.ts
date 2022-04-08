@@ -58,7 +58,7 @@ client.on('interactionCreate', async interaction => {
       if (val.length > 0) {
         const datetime = interaction.options.getString('datetime');
         //console.log("Lookup: ", timeZoneLookup[val.at(0).timezone])
-        const date = chrono.parseDate(datetime, { timezone: timeZoneLookup[val.at(0).timezone] });
+        const date = chrono.parseDate(datetime, { timezone: timeZoneLookup[val.at(0).timezone] }, { forwardDate: true });
         try {
           let timestamp = Math.floor(date.getTime() / 1000);
           await interaction.reply({ content: time(timestamp) + '\n' + time(timestamp, 'R') });
@@ -150,7 +150,7 @@ client.on('messageCreate', async (message: Message) => {
   fetchTimezoneByUserID(author.id).then(async val => {
     if (val.length > 0) {
       //console.log("Lookup: ", timeZoneLookup[val.at(0).timezone])
-      const date = chrono.parseDate(content, { timezone: timeZoneLookup[val.at(0).timezone] });
+      const date = chrono.parseDate(content, { timezone: timeZoneLookup[val.at(0).timezone] }, { forwardDate: true });
       try {
         let timestamp = Math.floor(date.getTime() / 1000);
         //await message.reply({ content: time(timestamp) + '\n' + time(timestamp, 'R'), ephemeral: true });
