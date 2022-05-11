@@ -212,7 +212,7 @@ client.on('messageReactionAdd', async (messageReaction: MessageReaction, user: U
       console.log("start req")
       messageReaction.users.fetch().then(() => {
         console.log("got req")
-        messageReaction.message.guild.members.cache[userId].then(user => {
+        messageReaction.message.guild.members.cache[userId]?.then(user => {
           console.log("got req 2")
           if (user.roles.cache.hasAny(...rule.allowedRoles) && messageReaction.users.cache.hasAny(...rule.bossUserIDs)) {
 
