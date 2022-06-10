@@ -201,7 +201,16 @@ client.on('messageCreate', async (message: Message) => {
         })
         const filter = (reaction, user) => reaction.emoji.name === '🕐' && user.id === author.id
         const collector = message.createReactionCollector({ filter, max: 1 })
-        collector.on('collect', r => message.reply({ content: time(timestamp) + '\n' + time(timestamp, 'R') }))
+        collector.on('collect', () => {
+          message.reply({ content: time(timestamp) + '\n' + time(timestamp, 'R') })
+          message.reactions.cache.forEach((reaction) => {
+            if (reaction.emoji.name == '🕐') {
+              reaction.remove().catch(rejected => {
+                console.log(rejected);
+              });
+            }
+          })
+        })
       } catch { }
     }
   })
@@ -249,11 +258,11 @@ client.on('messageReactionAdd', async (messageReaction: MessageReaction, user: U
     let rule = rules[0] as IChannelReactionRules
     if (rules[0] && !rules[0].bossUserIDs.includes(userId)) {
 
-      console.log("start req")
+      //console.log("start req")
       messageReaction.users.fetch().then(() => {
-        console.log("got req")
+        //console.log("got req")
         messageReaction.message.guild.members.cache[userId]?.then(user => {
-          console.log("got req 2")
+          //console.log("got req 2")
           if (user.roles.cache.hasAny(...rule.allowedRoles) && messageReaction.users.cache.hasAny(...rule.bossUserIDs)) {
 
             //console.log("Reaction allowed")
