@@ -162,6 +162,13 @@ client.on('messageCreate', async (message: Message) => {
           const collector = message.createReactionCollector({ filter, max: 1 })
           collector.on('collect', () => {
             message.reply({ content: parsed.href, allowedMentions: { repliedUser: false } })
+            message.reactions.cache.forEach((reaction) => {
+              if (reaction.emoji.name == '📹') {
+                reaction.remove().catch(rejected => {
+                  console.log(rejected);
+                });
+              }
+            })
             message.suppressEmbeds()
           })
         } catch { }
