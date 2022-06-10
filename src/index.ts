@@ -144,9 +144,8 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-client.on('messageCreate', async (message: Message) => {
-  const { content, author, guildId, embeds } = message
-
+const twitterEmbedHandler = (message) => {
+  const { embeds } = message
   embeds.forEach((embed) => {
     if (embed.url && embed.video) {
       let parsed = new URL(embed.url);
@@ -175,6 +174,18 @@ client.on('messageCreate', async (message: Message) => {
       }
     }
   })
+}
+
+client.on('messageUpdate', async (oldMessage: Message, message: Message) => {
+  if (oldMessage.embeds.length != message.embeds.length) {
+    twitterEmbedHandler(message)
+  }
+})
+
+client.on('messageCreate', async (message: Message) => {
+  const { content, author, guildId } = message
+
+  twitterEmbedHandler(message)
 
   fetchTimezoneByUserID(author.id).then(async val => {
     if (val.length > 0) {
