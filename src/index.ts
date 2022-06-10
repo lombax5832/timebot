@@ -145,7 +145,29 @@ client.on('interactionCreate', async interaction => {
 });
 
 client.on('messageCreate', async (message: Message) => {
-  const { content, author, guildId } = message
+  const { content, author, guildId, embeds } = message
+
+  embeds.forEach((embed) => {
+    if (embed.url && embed.video) {
+      let parsed = new URL(embed.url);
+      if (parsed.hostname == "twitter.com") {
+        try {
+          parsed.hostname = "vxtwitter.com";
+          message.react('📹').then(reaction => {
+            setTimeout(() => reaction.remove().catch(rejected => {
+              console.log(rejected);
+            }), 10000)
+          })
+          const filter = (reaction, user) => reaction.emoji.name === '📹' && user.id !== client.user.id
+          const collector = message.createReactionCollector({ filter, max: 1 })
+          collector.on('collect', () => {
+            message.reply({ content: parsed.href, allowedMentions: { repliedUser: false } })
+            message.suppressEmbeds()
+          })
+        } catch { }
+      }
+    }
+  })
 
   fetchTimezoneByUserID(author.id).then(async val => {
     if (val.length > 0) {
