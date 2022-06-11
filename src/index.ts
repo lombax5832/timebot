@@ -48,17 +48,15 @@ const resultDictEmbedBuilder = (resultDict, startTimestmap, url) => new MessageE
     const paddedPercentage = (Math.round(resultDict[name].percentage * 10) / 10).toString()
     const seconds = Math.round(resultDict[name].duration) % 60
     const minutes = Math.floor(Math.round(resultDict[name].duration) / 60)
-    return { name: name, value: `[${paddedPercentage}%] ${minutes} minutes and ${seconds} seconds` }
+    return { name: name, value: `[${paddedPercentage}%] ${minutes} minutes and ${seconds} seconds in ${resultDict[name].wipes} wipes` }
   }))
-  .setFooter({text: "Log From"})
+  .setFooter({ text: "Log From" })
   .setTimestamp(startTimestmap);
 
 
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
-  //addUser({ userID: "149597358580039680", timezone: "America/New_York" })
   await deployCommands();
-  //console.log(timezoneListString.length)
   console.log('Ready!');
 });
 
@@ -66,8 +64,6 @@ client.on('interactionCreate', async interaction => {
   if (!interaction.isCommand()) return;
 
   const { commandName, user } = interaction;
-
-  //console.log(interaction);
 
   if (commandName === 'time') {
 
@@ -206,7 +202,7 @@ client.on('messageCreate', async (message: Message) => {
 
   const code = content.match(ffReportRegex);
   if (code?.groups?.code) {
-    const {resultDict, startTimestamp} = await getTimeSpentPerMech(code.groups.code, await ffGql)
+    const { resultDict, startTimestamp } = await getTimeSpentPerMech(code.groups.code, await ffGql)
     if (Object.keys(resultDict).length > 0) {
       message.reply({ embeds: [resultDictEmbedBuilder(resultDict, startTimestamp, code[0])] });
     }

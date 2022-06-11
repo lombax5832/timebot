@@ -112,19 +112,20 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
             reportDict[fight.id].duration = (fight.endTime - fight.startTime) / 1000;
         }
     });
-    //console.log(reportDict);
 
     let resultDict = {};
 
     Object.keys(reportDict).forEach((fightId) => {
-        resultDict[reportDict[fightId].name] = { duration: resultDict[reportDict[fightId].name] ? resultDict[reportDict[fightId].name].duration + reportDict[fightId].duration : reportDict[fightId].duration };
+        resultDict[reportDict[fightId].name] = {
+            duration: resultDict[reportDict[fightId].name] ? resultDict[reportDict[fightId].name].duration + reportDict[fightId].duration : reportDict[fightId].duration,
+            wipes: resultDict[reportDict[fightId].name] ? resultDict[reportDict[fightId].name].wipes + 1 : 1
+        };
     })
 
     Object.keys(reportDict).forEach((fightId) => {
         resultDict[reportDict[fightId].name].percentage = resultDict[reportDict[fightId].name].duration * 100 / totalTime;
     })
 
-    console.log(resultDict);
     return { resultDict, startTimestamp };
 }
 /*
