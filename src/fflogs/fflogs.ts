@@ -57,7 +57,7 @@ const getReportGql = async (ffGql: GraphQLClient, code: string) => {
             report(code: "${code}") {
                 events(
                     filterExpression: "actor.type = NPC AND type = 'cast' AND (ability.id in (25555,25569,26381,27529,27538,27958,27973))"
-                    endTime: 10302912
+                    endTime: 9999999999999
                     useAbilityIDs: false
                 ){
                     data
@@ -67,6 +67,7 @@ const getReportGql = async (ffGql: GraphQLClient, code: string) => {
                     startTime
                     endTime
                 }
+                startTime
             }
         }
     }
@@ -98,6 +99,7 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
         return {};
     }
 
+    const startTimestamp = data.reportData.report.startTime;
     let reportDict = {};
     let totalTime = 0;
 
@@ -123,7 +125,7 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
     })
 
     console.log(resultDict);
-    return resultDict;
+    return { resultDict, startTimestamp };
 }
 /*
 initFFLogsGQL().then(async (ffGql) => {

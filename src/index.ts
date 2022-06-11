@@ -39,16 +39,19 @@ const timeZonesEmbed = new MessageEmbed()
   .setTitle('Timezones List')
   .addFields(timezoneListChunks.map((val) => { return { name: '\u200B', value: val.join('\n'), inline: true } }));
 
-const resultDictEmbedBuilder = (resultDict, url) => new MessageEmbed()
+const resultDictEmbedBuilder = (resultDict, startTimestmap, url) => new MessageEmbed()
   .setTitle('Time Spent on Mechanics')
+  .setThumbnail("https://assets.rpglogs.com/img/ff/favicon.png")
   .setURL("https://" + url)
   .addFields(Object.keys(resultDict).map((name) => {
     console.log({ name: name, value: resultDict[name].duration });
-    const paddedPercentage = (Math.ceil(resultDict[name].percentage * 10) / 10).toString()
+    const paddedPercentage = (Math.round(resultDict[name].percentage * 10) / 10).toString()
     const seconds = Math.round(resultDict[name].duration) % 60
     const minutes = Math.floor(Math.round(resultDict[name].duration) / 60)
     return { name: name, value: `[${paddedPercentage}%] ${minutes} minutes and ${seconds} seconds` }
-  }));
+  }))
+  .setFooter({text: "Log From"})
+  .setTimestamp(startTimestmap);
 
 
 // When the client is ready, run this code (only once)
@@ -203,9 +206,9 @@ client.on('messageCreate', async (message: Message) => {
 
   const code = content.match(ffReportRegex);
   if (code?.groups?.code) {
-    const resultDict = await getTimeSpentPerMech(code.groups.code, await ffGql)
+    const {resultDict, startTimestamp} = await getTimeSpentPerMech(code.groups.code, await ffGql)
     if (Object.keys(resultDict).length > 0) {
-      message.reply({ embeds: [resultDictEmbedBuilder(resultDict, code[0])] });
+      message.reply({ embeds: [resultDictEmbedBuilder(resultDict, startTimestamp, code[0])] });
     }
   }
 
