@@ -44,7 +44,10 @@ const resultDictEmbedBuilder = (resultDict, url) => new MessageEmbed()
   .setURL("https://" + url)
   .addFields(Object.keys(resultDict).map((name) => {
     console.log({ name: name, value: resultDict[name].duration });
-    return { name: name, value: Math.round(resultDict[name].duration) + " seconds" }
+    const paddedPercentage = (Math.ceil(resultDict[name].percentage * 10) / 10).toString()
+    const seconds = Math.round(resultDict[name].duration) % 60
+    const minutes = Math.floor(Math.round(resultDict[name].duration) / 60)
+    return { name: name, value: `[${paddedPercentage}%] ${minutes} minutes and ${seconds} seconds` }
   }));
 
 
