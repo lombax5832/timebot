@@ -5,7 +5,8 @@
         "module": "commonjs",
         "lib": [
             "es2017",
-            "es2016.array.include"
+            "es2016.array.include",
+            "DOM"
         ],
         "outDir": "build",
         "sourceMap": true,

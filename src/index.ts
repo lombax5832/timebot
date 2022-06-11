@@ -15,6 +15,7 @@ import { addCommand, fetchCommandsByServerID, removeCommand } from './controller
 import { fetchServerWhitelistByServerID } from './controllers/serverWhitelist';
 import { fetchRulesByServerChannelID } from './controllers/channelReactionRules';
 import { IChannelReactionRules } from './models/channelReactionRules';
+import { initFFLogsGQL, getTimeSpentPerMech } from './fflogs/fflogs';
 
 // Create a new client instance
 const client = new Client({ partials: ['USER', 'GUILD_MEMBER', 'CHANNEL', 'MESSAGE', 'REACTION'], intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS] });
@@ -25,6 +26,9 @@ const db = mongoose.connection;
 let timezoneListString = '';
 let timezoneListChunks = chunkArray(getTimeZones().map((val) => { return val.name }), 6)
 
+const ffGql = initFFLogsGQL();
+const ffReportRegex = /fflogs\.com\/reports\/(?<code>[a-zA-Z0-9]{16})/;
+
 const timeZoneLookup = {}
 getTimeZones().forEach((val) => {
   timeZoneLookup[val.name] = val.currentTimeOffsetInMinutes
@@ -33,9 +37,16 @@ getTimeZones().forEach((val) => {
 
 const timeZonesEmbed = new MessageEmbed()
   .setTitle('Timezones List')
-  .addFields(timezoneListChunks.map((val) => { return { name: '\u200B', value: val.join('\n'), inline: true } }))
+  .addFields(timezoneListChunks.map((val) => { return { name: '\u200B', value: val.join('\n'), inline: true } }));
 
-//const timeZoneList = getTimeZones().map((val) => { return { label: val.name, description: val.abbreviation, value: val.name } })
+const resultDictEmbedBuilder = (resultDict, url) => new MessageEmbed()
+  .setTitle('Time Spent on Mechanics')
+  .setURL("https://" + url)
+  .addFields(Object.keys(resultDict).map((name) => {
+    console.log({ name: name, value: resultDict[name].duration });
+    return { name: name, value: Math.round(resultDict[name].duration) + " seconds" }
+  }));
+
 
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
@@ -186,6 +197,14 @@ client.on('messageCreate', async (message: Message) => {
   const { content, author, guildId } = message
 
   twitterEmbedHandler(message)
+
+  const code = content.match(ffReportRegex);
+  if (code?.groups?.code) {
+    const resultDict = await getTimeSpentPerMech(code.groups.code, await ffGql)
+    if (Object.keys(resultDict).length > 0) {
+      message.reply({ embeds: [resultDictEmbedBuilder(resultDict, code[0])] });
+    }
+  }
 
   fetchTimezoneByUserID(author.id).then(async val => {
     if (val.length > 0) {
