@@ -202,6 +202,7 @@ client.on('messageCreate', async (message: Message) => {
 
   const code = content.match(ffReportRegex);
   if (code?.groups?.code) {
+    message.channel.sendTyping();
     const { resultDict, startTimestamp } = await getTimeSpentPerMech(code.groups.code, await ffGql)
     if (Object.keys(resultDict).length > 0) {
       message.reply({ embeds: [resultDictEmbedBuilder(resultDict, startTimestamp, code[0])] });
