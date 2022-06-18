@@ -54,9 +54,9 @@ const getReportGql = async (ffGql: GraphQLClient, code: string) => {
     const query = gql`
     {
         reportData {
-            report(code: "${code}") {
+            report(code: "DB9RFnC4ybd2Yprv") {
                 events(
-                    filterExpression: "actor.type = NPC AND type = 'cast' AND (ability.id in (25555,25569,26381,27529,27538,27958,27973))"
+                    filterExpression: "actor.type = NPC AND type = 'cast' AND (ability.id in (25555,25569,26381,27529,27538,27957,27973))"
                     endTime: 9999999999999
                     useAbilityIDs: false
                 ){
@@ -101,7 +101,13 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
 
     const startTimestamp = data.reportData.report.startTime;
     let reportDict = {};
+    // let nameDict = {};
     let totalTime = 0;
+    /*
+        data.reportData.report.fights.forEach(fight => {
+            data.reportData.report.events.data.filter(event => event.fight == fight.id).forEach()
+        });
+    */
 
     data.reportData.report.events.data.forEach(event => {
         reportDict[event.fight] = { name: event.ability.name };
@@ -110,6 +116,10 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
         if (reportDict[fight.id]) {
             totalTime += (fight.endTime - fight.startTime) / 1000;
             reportDict[fight.id].duration = (fight.endTime - fight.startTime) / 1000;
+
+            if (reportDict[fight.id].name == "Great Wyrmsbreath") {
+                reportDict[fight.id].name = "Wyrmsbreath" + (reportDict[fight.id].duration > 800 ? " 2" : "");
+            }
         }
     });
 
@@ -125,13 +135,13 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
     Object.keys(reportDict).forEach((fightId) => {
         resultDict[reportDict[fightId].name].percentage = resultDict[reportDict[fightId].name].duration * 100 / totalTime;
     })
-
+    
     return { resultDict, startTimestamp };
 }
 /*
 initFFLogsGQL().then(async (ffGql) => {
-    //const data = await getReportGql(ffGql, "Tf1qCBkV6LJP3jAc")
-    getTimeSpentPerMech("Tf1qCBkV6LJP3jAc", ffGql)
+    //const data = await getReportGql(ffGql, "DB9RFnC4ybd2Yprv")
+    getTimeSpentPerMech("DB9RFnC4ybd2Yprv", ffGql)
 })
 /*
 initFFLogs().then((ffSdk) => {
