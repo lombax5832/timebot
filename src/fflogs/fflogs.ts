@@ -54,7 +54,7 @@ const getReportGql = async (ffGql: GraphQLClient, code: string) => {
     const query = gql`
     {
         reportData {
-            report(code: "DB9RFnC4ybd2Yprv") {
+            report(code: "${code}") {
                 events(
                     filterExpression: "actor.type = NPC AND type = 'cast' AND (ability.id in (25555,25569,26381,27529,27538,27957,27973))"
                     endTime: 9999999999999
@@ -74,7 +74,7 @@ const getReportGql = async (ffGql: GraphQLClient, code: string) => {
   `
 
     const data = await ffGql.request(query)
-    console.log(JSON.stringify(data, undefined, 2))
+    //console.log(JSON.stringify(data, undefined, 2))
     return data;
 }
 
@@ -135,13 +135,15 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
     Object.keys(reportDict).forEach((fightId) => {
         resultDict[reportDict[fightId].name].percentage = resultDict[reportDict[fightId].name].duration * 100 / totalTime;
     })
-    
+
+    console.log(reportDict);
+    console.log(resultDict);
     return { resultDict, startTimestamp };
 }
-/*
+
 initFFLogsGQL().then(async (ffGql) => {
     //const data = await getReportGql(ffGql, "DB9RFnC4ybd2Yprv")
-    getTimeSpentPerMech("DB9RFnC4ybd2Yprv", ffGql)
+    getTimeSpentPerMech("Tf1qCBkV6LJP3jAc", ffGql)
 })
 /*
 initFFLogs().then((ffSdk) => {
