@@ -149,7 +149,7 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
     console.log(resultDict);
     return { resultDict, startTimestamp };
 }
-
+/*
 initFFLogsGQL().then(async (ffGql) => {
     //const data = await getReportGql(ffGql, "DB9RFnC4ybd2Yprv")
     getTimeSpentPerMech("jRbCBKhZ2tW16aV7", ffGql)
