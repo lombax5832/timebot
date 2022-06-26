@@ -56,7 +56,7 @@ const getReportGql = async (ffGql: GraphQLClient, code: string) => {
         reportData {
             report(code: "${code}") {
                 events(
-                    filterExpression: "actor.type = NPC AND type = 'cast' AND (ability.id in (25555,25569,26381,27529,27538,27957,27973,29752,28060))"
+                    filterExpression: "actor.type = NPC AND type = 'cast' AND (ability.id in (25555,25569,26381,27529,27538,27957,27973,29752,28060,29453,28058))"
                     endTime: 9999999999999
                     useAbilityIDs: false
                 ){
@@ -120,6 +120,15 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
             if (reportDict[fight.id].name == "Great Wyrmsbreath") {
                 reportDict[fight.id].name = "Wyrmsbreath" + (reportDict[fight.id].duration > 800 ? " 2" : "");
             }
+            if (reportDict[fight.id].name == "_rsv_28060_-1_1_C0_0Action") {
+                reportDict[fight.id].name = "Exaflare's Edge" + (reportDict[fight.id].duration > 910 ? ` ${Math.floor((reportDict[fight.id].duration-910)/80)+1}`: "");
+            }
+            if (reportDict[fight.id].name == "_rsv_29453_-1_1_C0_0Action") {
+                reportDict[fight.id].name = "Akh Morn's Edge" + (reportDict[fight.id].duration > 930 ? ` ${Math.floor((reportDict[fight.id].duration-930)/80)+1}`: "");
+            }
+            if (reportDict[fight.id].name == "_rsv_28058_-1_1_C0_0Action") {
+                reportDict[fight.id].name = "Gigaflare's Edge" + (reportDict[fight.id].duration > 956 ? ` ${Math.floor((reportDict[fight.id].duration-956)/80)+1}`: "");
+            }
         }
     });
 
@@ -143,7 +152,7 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
 
 initFFLogsGQL().then(async (ffGql) => {
     //const data = await getReportGql(ffGql, "DB9RFnC4ybd2Yprv")
-    getTimeSpentPerMech("Tf1qCBkV6LJP3jAc", ffGql)
+    getTimeSpentPerMech("jRbCBKhZ2tW16aV7", ffGql)
 })
 /*
 initFFLogs().then((ffSdk) => {
