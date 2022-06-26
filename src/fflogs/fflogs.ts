@@ -4,6 +4,25 @@ require('dotenv').config({ path: path.resolve(__dirname, '../../.env') }); //ini
 import { GraphQLClient, gql } from 'graphql-request';
 import { buildSdk, getSdk } from '@rpglogs/api-sdk';
 
+const timeline: String[] = [
+    "Strength of the Ward",
+    "Sanctity of the Ward",
+    "Dive from Grace",
+    "Wrath of the Heavens",
+    "Death of the Heavens",
+    "Wyrmsbreath",
+    "Wroth Flames",
+    "Wyrmsbreath 2",
+    "Exaflare's Edge 1",
+    "Akh Morn's Edge 1",
+    "Gigaflare's Edge 1",
+    "Exaflare's Edge 2",
+    "Akh Morn's Edge 2",
+    "Gigaflare's Edge 2",
+    "Exaflare's Edge 3",
+    "Akh Morn's Edge 3",
+]
+
 async function getAccessToken() {
     console.log(process.env.RPGLOGS_API_CLIENT_ID + ':' + process.env.RPGLOGS_API_CLIENT_SECRET)
     const authHeader = 'Basic ' +
@@ -121,13 +140,13 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
                 reportDict[fight.id].name = "Wyrmsbreath" + (reportDict[fight.id].duration > 800 ? " 2" : "");
             }
             if (reportDict[fight.id].name == "_rsv_28060_-1_1_C0_0Action") {
-                reportDict[fight.id].name = "Exaflare's Edge" + (reportDict[fight.id].duration > 910 ? ` ${Math.floor((reportDict[fight.id].duration-910)/80)+1}`: "");
+                reportDict[fight.id].name = "Exaflare's Edge" + (reportDict[fight.id].duration > 910 ? ` ${Math.floor((reportDict[fight.id].duration - 910) / 80) + 1}` : "");
             }
             if (reportDict[fight.id].name == "_rsv_29453_-1_1_C0_0Action") {
-                reportDict[fight.id].name = "Akh Morn's Edge" + (reportDict[fight.id].duration > 930 ? ` ${Math.floor((reportDict[fight.id].duration-930)/80)+1}`: "");
+                reportDict[fight.id].name = "Akh Morn's Edge" + (reportDict[fight.id].duration > 930 ? ` ${Math.floor((reportDict[fight.id].duration - 930) / 80) + 1}` : "");
             }
             if (reportDict[fight.id].name == "_rsv_28058_-1_1_C0_0Action") {
-                reportDict[fight.id].name = "Gigaflare's Edge" + (reportDict[fight.id].duration > 956 ? ` ${Math.floor((reportDict[fight.id].duration-956)/80)+1}`: "");
+                reportDict[fight.id].name = "Gigaflare's Edge" + (reportDict[fight.id].duration > 956 ? ` ${Math.floor((reportDict[fight.id].duration - 956) / 80) + 1}` : "");
             }
         }
     });
@@ -145,9 +164,18 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
         resultDict[reportDict[fightId].name].percentage = resultDict[reportDict[fightId].name].duration * 100 / totalTime;
     })
 
-    console.log(reportDict);
-    console.log(resultDict);
-    return { resultDict, startTimestamp };
+    let resultSet = [];
+
+    Object.keys(resultDict).forEach((result) => {
+        resultSet.push({ name: result, ...resultDict[result] })
+    })
+
+    resultSet.sort((a, b) => timeline.indexOf(a.name) - timeline.indexOf(b.name))
+
+    //console.log(reportDict);
+    //console.log(resultDict);
+    console.log(resultSet);
+    return { resultSet, startTimestamp };
 }
 /*
 initFFLogsGQL().then(async (ffGql) => {

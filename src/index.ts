@@ -39,16 +39,16 @@ const timeZonesEmbed = new MessageEmbed()
   .setTitle('Timezones List')
   .addFields(timezoneListChunks.map((val) => { return { name: '\u200B', value: val.join('\n'), inline: true } }));
 
-const resultDictEmbedBuilder = (resultDict, startTimestmap, url) => new MessageEmbed()
+const resultDictEmbedBuilder = (resultSet, startTimestmap, url) => new MessageEmbed()
   .setTitle('Time Spent on Mechanics')
   .setThumbnail("https://assets.rpglogs.com/img/ff/favicon.png")
   .setURL("https://" + url)
-  .addFields(Object.keys(resultDict).map((name) => {
-    console.log({ name: name, value: resultDict[name].duration });
-    const paddedPercentage = (Math.round(resultDict[name].percentage * 10) / 10).toString()
-    const seconds = Math.round(resultDict[name].duration) % 60
-    const minutes = Math.floor(Math.round(resultDict[name].duration) / 60)
-    return { name: name, value: `[${paddedPercentage}%] ${minutes} minutes and ${seconds} seconds in ${resultDict[name].wipes} wipes` }
+  .addFields(resultSet.map((mech) => {
+    console.log({ name: mech.name, value: mech.duration });
+    const paddedPercentage = (Math.round(mech.percentage * 10) / 10).toString()
+    const seconds = Math.round(mech.duration) % 60
+    const minutes = Math.floor(Math.round(mech.duration) / 60)
+    return { name: mech.name, value: `[${paddedPercentage}%] ${minutes} minutes and ${seconds} seconds in ${mech.wipes} wipes` }
   }))
   .setFooter({ text: "Log From" })
   .setTimestamp(startTimestmap);
@@ -203,9 +203,9 @@ client.on('messageCreate', async (message: Message) => {
   const code = content.match(ffReportRegex);
   if (code?.groups?.code) {
     message.channel.sendTyping();
-    const { resultDict, startTimestamp } = await getTimeSpentPerMech(code.groups.code, await ffGql)
-    if (Object.keys(resultDict).length > 0) {
-      message.reply({ embeds: [resultDictEmbedBuilder(resultDict, startTimestamp, code[0])] });
+    const { resultSet, startTimestamp } = await getTimeSpentPerMech(code.groups.code, await ffGql)
+    if (resultSet.length > 0) {
+      message.reply({ embeds: [resultDictEmbedBuilder(resultSet, startTimestamp, code[0])] });
     }
   }
 
