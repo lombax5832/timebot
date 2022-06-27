@@ -110,7 +110,7 @@ client.on('interactionCreate', async interaction => {
 
   const { message } = interaction
 
-  if (interaction.customId === "addVideo") {
+  if (interaction.customId === "addVideo" && fflogsEmbedCache[message.id]) {
     console.log(interaction.message.embeds)
 
     const code = interaction.fields.getTextInputValue('vodURL').match(twitchVidRegex);
@@ -130,21 +130,17 @@ client.on('interactionCreate', async interaction => {
               .setLabel('Attach a VOD')
               .setStyle('PRIMARY'),
           )
-        if (fflogsEmbedCache[message.id]) {
-          let oldMessage = await fflogsEmbedCache[message.id].message
-          fflogsEmbedCache[message.id].vods.push({ url: code.groups.code, sender: interaction.user, startTime: vidStartTime })
+        let oldMessage = await fflogsEmbedCache[message.id].message
+        fflogsEmbedCache[message.id].vods.push({ url: code.groups.code, sender: interaction.user, startTime: vidStartTime })
 
-          oldMessage.edit({ embeds: [resultDictEmbedBuilder(fflogsEmbedCache[message.id].resultSet, fflogsEmbedCache[message.id].startTimestamp, fflogsEmbedCache[message.id].url, fflogsEmbedCache[message.id].vods, fflogsEmbedCache[message.id].timestamps)], components: [row] })
-            .then(() => {
-              interaction.reply({ content: "Successfully added your vod!", ephemeral: true })
-            })
-            .catch((error) => {
-              console.log("Error oldMessage.edit():", error)
-              interaction.reply({ content: "Could not add your vod!", ephemeral: true })
-            })
-
-
-        }
+        oldMessage.edit({ embeds: [resultDictEmbedBuilder(fflogsEmbedCache[message.id].resultSet, fflogsEmbedCache[message.id].startTimestamp, fflogsEmbedCache[message.id].url, fflogsEmbedCache[message.id].vods, fflogsEmbedCache[message.id].timestamps)], components: [row] })
+          .then(() => {
+            interaction.reply({ content: "Successfully added your vod!", ephemeral: true })
+          })
+          .catch((error) => {
+            console.log("Error oldMessage.edit():", error)
+            interaction.reply({ content: "Could not add your vod!", ephemeral: true })
+          })
       }
     }
   }
