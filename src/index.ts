@@ -8,7 +8,7 @@ import { getTimeZones } from "@vvo/tzdb";
 import { inlineCode, time, userMention } from '@discordjs/builders';
 import * as chrono from 'chrono-node';
 import deployCommands from './deploy-commands';
-import { Client, Intents, Message, MessageEmbed, MessageReaction, User } from 'discord.js';
+import { Client, Intents, Message, MessageActionRow, MessageButton, MessageEmbed, MessageReaction, Modal, ModalActionRowComponent, TextInputComponent, User } from 'discord.js';
 import { chunkArray } from './util';
 import { fetchKeywordReactByUserID } from './controllers/keywordReact';
 import { addCommand, fetchCommandsByServerID, removeCommand } from './controllers/commands';
@@ -16,6 +16,7 @@ import { fetchServerWhitelistByServerID } from './controllers/serverWhitelist';
 import { fetchRulesByServerChannelID } from './controllers/channelReactionRules';
 import { IChannelReactionRules } from './models/channelReactionRules';
 import { initFFLogsGQL, getTimeSpentPerMech } from './fflogs/fflogs';
+import { initTwitch, getVideoStartTimestamp } from './twitch/twitch';
 
 // Create a new client instance
 const client = new Client({ partials: ['USER', 'GUILD_MEMBER', 'CHANNEL', 'MESSAGE', 'REACTION'], intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS] });
@@ -27,7 +28,11 @@ let timezoneListString = '';
 let timezoneListChunks = chunkArray(getTimeZones().map((val) => { return val.name }), 6)
 
 const ffGql = initFFLogsGQL();
+const twitch = initTwitch();
 const ffReportRegex = /fflogs\.com\/reports\/(?<code>[a-zA-Z0-9]{16})/;
+const twitchVidRegex = /twitch.tv\/videos\/(?<code>[0-9]{10})/;
+
+const fflogsEmbedCache = [];
 
 const timeZoneLookup = {}
 getTimeZones().forEach((val) => {
@@ -39,7 +44,7 @@ const timeZonesEmbed = new MessageEmbed()
   .setTitle('Timezones List')
   .addFields(timezoneListChunks.map((val) => { return { name: '\u200B', value: val.join('\n'), inline: true } }));
 
-const resultDictEmbedBuilder = (resultSet, startTimestmap, url) => new MessageEmbed()
+const resultDictEmbedBuilder = (resultSet, startTimestmap, url, vodLink?, timestamps?, vidStartTime?) => new MessageEmbed()
   .setTitle('Time Spent on Mechanics')
   .setThumbnail("https://assets.rpglogs.com/img/ff/favicon.png")
   .setURL("https://" + url)
@@ -48,16 +53,80 @@ const resultDictEmbedBuilder = (resultSet, startTimestmap, url) => new MessageEm
     const paddedPercentage = (Math.round(mech.percentage * 10) / 10).toString()
     const seconds = Math.round(mech.duration) % 60
     const minutes = Math.floor(Math.round(mech.duration) / 60)
-    return { name: mech.name, value: `[${paddedPercentage}%] ${minutes} minutes and ${seconds} seconds in ${mech.wipes} wipes` }
+    let vodLinks = ""
+    if (timestamps) {
+      console.log("startTime: ", vidStartTime, "timestamps: ", timestamps[mech.name])
+      vodLinks = timestamps[mech.name].map((timestamp, i) => `[${i + 1}](https://www.twitch.tv/videos/${vodLink}?t=${Math.floor((timestamp-vidStartTime)/1000)}s)`).join(' ')
+    }
+    if (vodLinks.length > 0) {
+      vodLinks = `\n${vodLinks}`
+    }
+    return {
+      name: mech.name,
+      value: `[${paddedPercentage}%] ${minutes} minutes and ${seconds} seconds in ${mech.wipes} wipes${vodLinks}`
+    }
   }))
   .setFooter({ text: "Log From" })
-  .setTimestamp(startTimestmap);
+  .setTimestamp(startTimestmap)
 
+const embedModalBuilder = (messageId) => {
+  const modal = new Modal()
+    .setCustomId("addVideo")
+    .setTitle("Add a VOD")
+
+  const videoURL = new TextInputComponent()
+    .setCustomId('vodURL')
+    .setLabel("VOD URL")
+    .setStyle('SHORT')
+
+  const firstActionRow = new MessageActionRow<ModalActionRowComponent>().addComponents(videoURL);
+
+  modal.addComponents(firstActionRow);
+
+  return modal;
+}
 
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
-  await deployCommands();
+  //await deployCommands();
   console.log('Ready!');
+});
+
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isButton()) return;
+
+  const { message } = interaction
+
+  if (interaction.customId === "addVideo") {
+    await interaction.showModal(embedModalBuilder(message.id))
+  }
+});
+
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isModalSubmit()) return;
+
+  const { message } = interaction
+
+  if (interaction.customId === "addVideo") {
+    console.log(interaction.message.embeds)
+
+    const code = interaction.fields.getTextInputValue('vodURL').match(twitchVidRegex);
+    if (code?.groups?.code) {
+      const vidStartTime = await getVideoStartTimestamp(await twitch, code.groups.code)
+      if (vidStartTime > 0) {
+        console.log("cache lookup =", message.id, fflogsEmbedCache[message.id])
+        for (const mechName in fflogsEmbedCache[message.id].timestamps) {
+          fflogsEmbedCache[message.id].timestamps[mechName].forEach((timestamp, i) => {
+
+          });
+        }
+        if (fflogsEmbedCache[message.id]) {
+          let oldMessage = await fflogsEmbedCache[message.id].message
+          oldMessage.edit({ embeds: [resultDictEmbedBuilder(fflogsEmbedCache[message.id].resultSet, fflogsEmbedCache[message.id].startTimestamp, fflogsEmbedCache[message.id].url, code.groups.code, fflogsEmbedCache[message.id].timestamps, vidStartTime)], components: [] })
+        }
+      }
+    }
+  }
 });
 
 client.on('interactionCreate', async interaction => {
@@ -71,7 +140,7 @@ client.on('interactionCreate', async interaction => {
       if (val.length > 0) {
         const datetime = interaction.options.getString('datetime');
         //console.log("Lookup: ", timeZoneLookup[val.at(0).timezone])
-        const date = chrono.parseDate(datetime, { timezone: timeZoneLookup[val.at(0).timezone] }, { forwardDate: true });
+        const date = chrono.parseDate(datetime, { timezone: timeZoneLookup[val[0].timezone] }, { forwardDate: true });
         try {
           let timestamp = Math.floor(date.getTime() / 1000);
           await interaction.reply({ content: time(timestamp) + '\n' + time(timestamp, 'R') + '\n' + inlineCode(time(timestamp)), ephemeral: true });
@@ -93,7 +162,7 @@ client.on('interactionCreate', async interaction => {
       case 'get':
         fetchTimezoneByUserID(user.id).then(async val => {
           if (val.length > 0) {
-            await interaction.reply({ content: `Your timezone: ${val.at(0).timezone}`, ephemeral: true });
+            await interaction.reply({ content: `Your timezone: ${val[0].timezone}`, ephemeral: true });
           } else {
             await interaction.reply({
               content: `No timezone set!\n
@@ -203,16 +272,26 @@ client.on('messageCreate', async (message: Message) => {
   const code = content.match(ffReportRegex);
   if (code?.groups?.code) {
     message.channel.sendTyping();
-    const { resultSet, startTimestamp } = await getTimeSpentPerMech(code.groups.code, await ffGql)
+    const { resultSet, timestamps, startTimestamp } = await getTimeSpentPerMech(code.groups.code, await ffGql)
     if (resultSet.length > 0) {
-      message.reply({ embeds: [resultDictEmbedBuilder(resultSet, startTimestamp, code[0])] });
+      const row = new MessageActionRow()
+        .addComponents(
+          new MessageButton()
+            .setCustomId('addVideo')
+            .setLabel('Attach a VOD')
+            .setStyle('PRIMARY'),
+        );
+      let reply = await message.reply({ embeds: [resultDictEmbedBuilder(resultSet, startTimestamp, code[0])], components: [row] });
+
+      fflogsEmbedCache[reply.id] = { message: reply, resultSet: resultSet, timestamps: timestamps, url: code[0], startTimestamp: startTimestamp }
+      console.log("reply id =", reply.id)
     }
   }
 
   fetchTimezoneByUserID(author.id).then(async val => {
     if (val.length > 0) {
       //console.log("Lookup: ", timeZoneLookup[val.at(0).timezone])
-      const date = chrono.parseDate(content, { timezone: timeZoneLookup[val.at(0).timezone] }, { forwardDate: true });
+      const date = chrono.parseDate(content, { timezone: timeZoneLookup[val[0].timezone] }, { forwardDate: true });
       try {
         let timestamp = Math.floor(date.getTime() / 1000);
         //await message.reply({ content: time(timestamp) + '\n' + time(timestamp, 'R'), ephemeral: true });

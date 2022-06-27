@@ -3,6 +3,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../../.env') }); //ini
 
 import { GraphQLClient, gql } from 'graphql-request';
 import { buildSdk, getSdk } from '@rpglogs/api-sdk';
+import { idText } from 'typescript';
 
 const timeline: String[] = [
     "Strength of the Ward",
@@ -128,6 +129,8 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
         });
     */
 
+    let timestamps: number[][] = []
+
     data.reportData.report.events.data.forEach(event => {
         reportDict[event.fight] = { name: event.ability.name };
     });
@@ -162,6 +165,16 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
 
     Object.keys(reportDict).forEach((fightId) => {
         resultDict[reportDict[fightId].name].percentage = resultDict[reportDict[fightId].name].duration * 100 / totalTime;
+
+    })
+
+    data.reportData.report.fights.forEach(fight => {
+        if (reportDict[fight.id]) {
+            if (!timestamps[reportDict[fight.id].name]) {
+                timestamps[reportDict[fight.id].name] = []
+            }
+            timestamps[reportDict[fight.id].name].push(fight.startTime + startTimestamp)
+        }
     })
 
     let resultSet = [];
@@ -172,10 +185,10 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
 
     resultSet.sort((a, b) => timeline.indexOf(a.name) - timeline.indexOf(b.name))
 
-    //console.log(reportDict);
+    console.log(reportDict);
     //console.log(resultDict);
-    console.log(resultSet);
-    return { resultSet, startTimestamp };
+    console.log(timestamps);
+    return { resultSet, timestamps, startTimestamp };
 }
 /*
 initFFLogsGQL().then(async (ffGql) => {
