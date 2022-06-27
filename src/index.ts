@@ -58,7 +58,7 @@ const resultDictEmbedBuilder = (resultSet, startTimestmap, url, vods?, timestamp
     vods?.forEach((vod) => {
       if (timestamps) {
         console.log("startTime: ", vod.startTime, "timestamps: ", timestamps[mech.name])
-        vodLinks.push(`${vod.sender}: ` + timestamps[mech.name].map((timestamp, i) => `[${i + 1}](https://www.twitch.tv/videos/${vod.url}?t=${Math.floor((timestamp -  vod.startTime) / 1000)}s)`).join(' '))
+        vodLinks.push(`${vod.sender}: ` + timestamps[mech.name].map((timestamp, i) => `[${i + 1}](https://www.twitch.tv/videos/${vod.url}?t=${Math.floor((timestamp - vod.startTime) / 1000)}s)`).join(' '))
       }
       if (vodLinks.length > 0) {
         vodLinkstring = '\n' + vodLinks.join('\n');
@@ -133,12 +133,17 @@ client.on('interactionCreate', async interaction => {
         if (fflogsEmbedCache[message.id]) {
           let oldMessage = await fflogsEmbedCache[message.id].message
           fflogsEmbedCache[message.id].vods.push({ url: code.groups.code, sender: interaction.user, startTime: vidStartTime })
-          try {
-            oldMessage.edit({ embeds: [resultDictEmbedBuilder(fflogsEmbedCache[message.id].resultSet, fflogsEmbedCache[message.id].startTimestamp, fflogsEmbedCache[message.id].url, fflogsEmbedCache[message.id].vods, fflogsEmbedCache[message.id].timestamps)], components: [row] })
-            interaction.reply({ content: "Successfully added your vod!", ephemeral: true })
-          } catch {
 
-          }
+          oldMessage.edit({ embeds: [resultDictEmbedBuilder(fflogsEmbedCache[message.id].resultSet, fflogsEmbedCache[message.id].startTimestamp, fflogsEmbedCache[message.id].url, fflogsEmbedCache[message.id].vods, fflogsEmbedCache[message.id].timestamps)], components: [row] })
+            .then(() => {
+              interaction.reply({ content: "Successfully added your vod!", ephemeral: true })
+            })
+            .catch((error) => {
+              console.log("Error oldMessage.edit():", error)
+              interaction.reply({ content: "Could not add your vod!", ephemeral: true })
+            })
+
+
         }
       }
     }
