@@ -44,7 +44,7 @@ const timeZonesEmbed = new MessageEmbed()
   .setTitle('Timezones List')
   .addFields(timezoneListChunks.map((val) => { return { name: '\u200B', value: val.join('\n'), inline: true } }));
 
-const resultDictEmbedBuilder = (resultSet, startTimestmap, url, vodLink?, timestamps?, vidStartTime?) => new MessageEmbed()
+const resultDictEmbedBuilder = (resultSet, startTimestmap, url, vods?, timestamps?, vidStartTime?) => new MessageEmbed()
   .setTitle('Time Spent on Mechanics')
   .setThumbnail("https://assets.rpglogs.com/img/ff/favicon.png")
   .setURL("https://" + url)
@@ -53,17 +53,20 @@ const resultDictEmbedBuilder = (resultSet, startTimestmap, url, vodLink?, timest
     const paddedPercentage = (Math.round(mech.percentage * 10) / 10).toString()
     const seconds = Math.round(mech.duration) % 60
     const minutes = Math.floor(Math.round(mech.duration) / 60)
-    let vodLinks = ""
-    if (timestamps) {
-      console.log("startTime: ", vidStartTime, "timestamps: ", timestamps[mech.name])
-      vodLinks = timestamps[mech.name].map((timestamp, i) => `[${i + 1}](https://www.twitch.tv/videos/${vodLink}?t=${Math.floor((timestamp-vidStartTime)/1000)}s)`).join(' ')
-    }
-    if (vodLinks.length > 0) {
-      vodLinks = `\n${vodLinks}`
-    }
+    let vodLinks = []
+    let vodLinkstring = "";
+    vods?.forEach((vod) => {
+      if (timestamps) {
+        console.log("startTime: ", vidStartTime, "timestamps: ", timestamps[mech.name])
+        vodLinks.push(`${vod.sender}: ` + timestamps[mech.name].map((timestamp, i) => `[${i + 1}](https://www.twitch.tv/videos/${vod.url}?t=${Math.floor((timestamp - vidStartTime) / 1000)}s)`).join(' '))
+      }
+      if (vodLinks.length > 0) {
+        vodLinkstring = '\n' + vodLinks.join('\n');
+      }
+    })
     return {
       name: mech.name,
-      value: `[${paddedPercentage}%] ${minutes} minutes and ${seconds} seconds in ${mech.wipes} wipes${vodLinks}`
+      value: `[${paddedPercentage}%] ${minutes} minutes and ${seconds} seconds in ${mech.wipes} wipes${vodLinkstring}`
     }
   }))
   .setFooter({ text: "Log From" })
@@ -120,9 +123,22 @@ client.on('interactionCreate', async interaction => {
 
           });
         }
+        const row = new MessageActionRow()
+          .addComponents(
+            new MessageButton()
+              .setCustomId('addVideo')
+              .setLabel('Attach a VOD')
+              .setStyle('PRIMARY'),
+          )
         if (fflogsEmbedCache[message.id]) {
           let oldMessage = await fflogsEmbedCache[message.id].message
-          oldMessage.edit({ embeds: [resultDictEmbedBuilder(fflogsEmbedCache[message.id].resultSet, fflogsEmbedCache[message.id].startTimestamp, fflogsEmbedCache[message.id].url, code.groups.code, fflogsEmbedCache[message.id].timestamps, vidStartTime)], components: [] })
+          fflogsEmbedCache[message.id].vods.push({ url: code.groups.code, sender: interaction.user })
+          try {
+            oldMessage.edit({ embeds: [resultDictEmbedBuilder(fflogsEmbedCache[message.id].resultSet, fflogsEmbedCache[message.id].startTimestamp, fflogsEmbedCache[message.id].url, fflogsEmbedCache[message.id].vods, fflogsEmbedCache[message.id].timestamps, vidStartTime)], components: [row] })
+            interaction.reply({ content: "Successfully added your vod!", ephemeral: true })
+          } catch {
+
+          }
         }
       }
     }
@@ -283,7 +299,7 @@ client.on('messageCreate', async (message: Message) => {
         );
       let reply = await message.reply({ embeds: [resultDictEmbedBuilder(resultSet, startTimestamp, code[0])], components: [row] });
 
-      fflogsEmbedCache[reply.id] = { message: reply, resultSet: resultSet, timestamps: timestamps, url: code[0], startTimestamp: startTimestamp }
+      fflogsEmbedCache[reply.id] = { message: reply, resultSet: resultSet, timestamps: timestamps, url: code[0], startTimestamp: startTimestamp, vods: [] }
       console.log("reply id =", reply.id)
     }
   }
