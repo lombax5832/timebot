@@ -3,7 +3,6 @@ require('dotenv').config({ path: path.resolve(__dirname, '../../.env') }); //ini
 
 import { GraphQLClient, gql } from 'graphql-request';
 import { buildSdk, getSdk } from '@rpglogs/api-sdk';
-import { idText } from 'typescript';
 
 const timeline: String[] = [
     "Strength of the Ward",
@@ -79,6 +78,7 @@ const getReportGql = async (ffGql: GraphQLClient, code: string) => {
                     filterExpression: "actor.type = NPC AND type = 'cast' AND (ability.id in (25555,25569,26381,27529,27538,27957,27973,29752,28060,29453,28058))"
                     endTime: 9999999999999
                     useAbilityIDs: false
+                    limit: 4000
                 ){
                     data
                 }
@@ -185,9 +185,9 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
 
     resultSet.sort((a, b) => timeline.indexOf(a.name) - timeline.indexOf(b.name))
 
-    console.log(reportDict);
+    //console.log(reportDict);
     //console.log(resultDict);
-    console.log(timestamps);
+    //console.log(timestamps);
     return { resultSet, timestamps, startTimestamp };
 }
 /*
