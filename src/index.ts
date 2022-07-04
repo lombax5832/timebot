@@ -16,7 +16,7 @@ import { fetchServerWhitelistByServerID } from './controllers/serverWhitelist';
 import { fetchRulesByServerChannelID } from './controllers/channelReactionRules';
 import { IChannelReactionRules } from './models/channelReactionRules';
 import { initFFLogsGQL, getTimeSpentPerMech } from './fflogs/fflogs';
-import { initTwitch, getVideoStartTimestamp } from './twitch/twitch';
+import { initTwitch, getVideoStartTimestamp, getVideoBroadcaster } from './twitch/twitch';
 
 // Create a new client instance
 const client = new Client({ partials: ['USER', 'GUILD_MEMBER', 'CHANNEL', 'MESSAGE', 'REACTION'], intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS] });
@@ -58,7 +58,7 @@ const resultDictEmbedBuilder = (resultSet, startTimestmap, url, vods?, timestamp
     vods?.forEach((vod) => {
       if (timestamps) {
         console.log("startTime: ", vod.startTime, "timestamps: ", timestamps[mech.name])
-        vodLinks.push(`${vod.sender}: ` + timestamps[mech.name].map((timestamp, i) => `[${i + 1}](https://www.twitch.tv/videos/${vod.url}?t=${Math.floor((timestamp - vod.startTime) / 1000)}s)`).join(' '))
+        vodLinks.push(`${vod.broadcaster}: ` + timestamps[mech.name].map((timestamp, i) => `[${i + 1}](https://www.twitch.tv/videos/${vod.url}?t=${Math.floor((timestamp - vod.startTime) / 1000)}s)`).join(' '))
       }
       if (vodLinks.length > 0) {
         vodLinkstring = '\n' + vodLinks.join('\n');
@@ -117,6 +117,7 @@ client.on('interactionCreate', async interaction => {
     if (code?.groups?.code) {
       const vidStartTime = await getVideoStartTimestamp(await twitch, code.groups.code)
       if (vidStartTime > 0) {
+        const vidBroadcaster = await getVideoBroadcaster(await twitch, code.groups.code)
         console.log("cache lookup =", message.id, fflogsEmbedCache[message.id])
         for (const mechName in fflogsEmbedCache[message.id].timestamps) {
           fflogsEmbedCache[message.id].timestamps[mechName].forEach((timestamp, i) => {
@@ -131,7 +132,7 @@ client.on('interactionCreate', async interaction => {
               .setStyle('PRIMARY'),
           )
         let oldMessage = await fflogsEmbedCache[message.id].message
-        fflogsEmbedCache[message.id].vods.push({ url: code.groups.code, sender: interaction.user, startTime: vidStartTime })
+        fflogsEmbedCache[message.id].vods.push({ url: code.groups.code, sender: interaction.user, startTime: vidStartTime, broadcaster: vidBroadcaster })
 
         oldMessage.edit({ embeds: [resultDictEmbedBuilder(fflogsEmbedCache[message.id].resultSet, fflogsEmbedCache[message.id].startTimestamp, fflogsEmbedCache[message.id].url, fflogsEmbedCache[message.id].vods, fflogsEmbedCache[message.id].timestamps)], components: [row] })
           .then(() => {

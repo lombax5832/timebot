@@ -143,13 +143,13 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
                 reportDict[fight.id].name = "Wyrmsbreath" + (reportDict[fight.id].duration > 800 ? " 2" : "");
             }
             if (reportDict[fight.id].name == "_rsv_28060_-1_1_C0_0Action") {
-                reportDict[fight.id].name = "Exaflare's Edge" + (reportDict[fight.id].duration > 910 ? ` ${Math.floor((reportDict[fight.id].duration - 910) / 80) + 1}` : "");
+                reportDict[fight.id].name = "Exaflare's Edge" + (reportDict[fight.id].duration > 900 ? ` ${Math.floor((reportDict[fight.id].duration - 900) / 80) + 1}` : "");
             }
             if (reportDict[fight.id].name == "_rsv_29453_-1_1_C0_0Action") {
-                reportDict[fight.id].name = "Akh Morn's Edge" + (reportDict[fight.id].duration > 930 ? ` ${Math.floor((reportDict[fight.id].duration - 930) / 80) + 1}` : "");
+                reportDict[fight.id].name = "Akh Morn's Edge" + (reportDict[fight.id].duration > 920 ? ` ${Math.floor((reportDict[fight.id].duration - 920) / 80) + 1}` : "");
             }
             if (reportDict[fight.id].name == "_rsv_28058_-1_1_C0_0Action") {
-                reportDict[fight.id].name = "Gigaflare's Edge" + (reportDict[fight.id].duration > 956 ? ` ${Math.floor((reportDict[fight.id].duration - 956) / 80) + 1}` : "");
+                reportDict[fight.id].name = "Gigaflare's Edge" + (reportDict[fight.id].duration > 946 ? ` ${Math.floor((reportDict[fight.id].duration - 946) / 80) + 1}` : "");
             }
         }
     });

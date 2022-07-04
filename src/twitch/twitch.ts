@@ -22,4 +22,12 @@ async function getVideoStartTimestamp(apiClient: ApiClient, videoId: string) {
     return video.creationDate.getTime()
 }
 
-export { init as initTwitch, getVideoStartTimestamp }
+async function getVideoBroadcaster(apiClient: ApiClient, videoId: string) {
+    const video = await apiClient.videos.getVideoById(videoId);
+
+    console.log((await video.getUser()).displayName)
+
+    return (await video.getUser()).displayName
+}
+
+export { init as initTwitch, getVideoStartTimestamp, getVideoBroadcaster }
