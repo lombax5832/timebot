@@ -75,7 +75,7 @@ const getReportGql = async (ffGql: GraphQLClient, code: string) => {
         reportData {
             report(code: "${code}") {
                 events(
-                    filterExpression: "actor.type = NPC AND type = 'cast' AND (ability.id in (25555,25569,26381,27529,27538,27957,27973,29752,28060,29453,28058))"
+                    filterExpression: "actor.type = NPC AND type = 'cast' AND (ability.id in (25555,25569,26381,27529,27538,27957,27973,29752,28060,29453,28058,31027,31002,30962))"
                     endTime: 9999999999999
                     useAbilityIDs: false
                     limit: 4000
@@ -150,6 +150,9 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
             }
             if (reportDict[fight.id].name == "_rsv_28058_-1_1_C0_0Action") {
                 reportDict[fight.id].name = "Gigaflare's Edge" + (reportDict[fight.id].duration > 946 ? ` ${Math.floor((reportDict[fight.id].duration - 946) / 80) + 1}` : "");
+            }
+            if (reportDict[fight.id].name == "Gorgomanteia") {
+                reportDict[fight.id].name = (reportDict[fight.id].duration > 240 ? "Gorgomanteia 2" : "Gorgomanteia");
             }
         }
     });
