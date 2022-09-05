@@ -21,6 +21,11 @@ const timeline: String[] = [
     "Gigaflare's Edge 2",
     "Exaflare's Edge 3",
     "Akh Morn's Edge 3",
+    "Natural Alignment 1",
+    "High Concept 1",
+    "Limitless Desolation",
+    "Natural Alignment 2",
+    "High Concept 2"
 ]
 
 async function getAccessToken() {
@@ -75,7 +80,7 @@ const getReportGql = async (ffGql: GraphQLClient, code: string) => {
         reportData {
             report(code: "${code}") {
                 events(
-                    filterExpression: "actor.type = NPC AND type = 'cast' AND (ability.id in (25555,25569,26381,27529,27538,27957,27973,29752,28060,29453,28058,31027,31002,30962,31032))"
+                    filterExpression: "actor.type = NPC AND type = 'cast' AND (ability.id in (25555,25569,26381,27529,27538,27957,27973,29752,28060,29453,28058,31027,31002,30962,31032,31148,31163,30189))"
                     endTime: 9999999999999
                     useAbilityIDs: false
                     limit: 4000
@@ -153,6 +158,12 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
             }
             if (reportDict[fight.id].name == "Gorgomanteia") {
                 reportDict[fight.id].name = (reportDict[fight.id].duration > 240 ? "Gorgomanteia 2" : "Gorgomanteia");
+            }
+            if (reportDict[fight.id].name == "High Concept") {
+                reportDict[fight.id].name = (reportDict[fight.id].duration > 150 ? "High Concept 2" : "High Concept 1");
+            }
+            if (reportDict[fight.id].name == "Natural Alignment") {
+                reportDict[fight.id].name = (reportDict[fight.id].duration > 150 ? "Natural Alignment 2" : "Natural Alignment 1");
             }
         }
     });
