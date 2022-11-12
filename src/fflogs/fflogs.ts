@@ -80,7 +80,7 @@ const getReportGql = async (ffGql: GraphQLClient, code: string) => {
         reportData {
             report(code: "${code}") {
                 events(
-                    filterExpression: "actor.type = NPC AND type = 'cast' AND (ability.id in (25555,25569,26381,27529,27538,27957,27973,29752,28060,29453,28058,31027,31002,30962,31032,31148,31163,30189))"
+                    filterExpression: "actor.type = NPC AND type = 'cast' AND (ability.id in (25555,25569,26381,27529,27538,27957,27956,27973,29752,28060,29453,28058,31027,31002,30962,31032,31148,31163,30189))"
                     endTime: 9999999999999
                     useAbilityIDs: false
                     limit: 4000
