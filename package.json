@@ -8,7 +8,6 @@
   },
   "scripts": {
     "build": "tsc --pretty",
-    "prestart": "npm run build",
     "start": "node build/index.js",
     "prestartffLogs": "npm run build",
     "startffLogs": "node build/fflogs/fflogs.js",
