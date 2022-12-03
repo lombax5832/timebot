@@ -192,7 +192,7 @@ client.on('interactionCreate', async interaction => {
         break;
       case 'set':
         const name = interaction.options.getString('name')
-        if (timeZoneLookup[name]) {
+        if (timeZoneLookup.hasOwnProperty(name)) {
           const doc = await updateUser({ userID: user.id, timezone: name })
           //console.log(doc)
           await interaction.reply({ content: `${userMention(user.id)} set timezone to ${inlineCode(doc.timezone)}.`, ephemeral: true })
