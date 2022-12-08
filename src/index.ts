@@ -8,7 +8,7 @@ import { getTimeZones } from "@vvo/tzdb";
 import { inlineCode, time, userMention } from '@discordjs/builders';
 import * as chrono from 'chrono-node';
 import deployCommands from './deploy-commands';
-import { Client, Intents, Message, MessageActionRow, MessageButton, MessageEmbed, MessageReaction, Modal, ModalActionRowComponent, TextInputComponent, User } from 'discord.js';
+import { Client, Intents, Message, MessageActionRow, MessageButton, MessageEmbed, MessageReaction, Modal, ModalActionRowComponent, TextChannel, TextInputComponent, User } from 'discord.js';
 import { chunkArray } from './util';
 import { fetchKeywordReactByUserID } from './controllers/keywordReact';
 import { addCommand, fetchCommandsByServerID, removeCommand } from './controllers/commands';
@@ -17,6 +17,8 @@ import { fetchRulesByServerChannelID } from './controllers/channelReactionRules'
 import { IChannelReactionRules } from './models/channelReactionRules';
 import { initFFLogsGQL, getTimeSpentPerMech } from './fflogs/fflogs';
 import { initTwitch, getVideoStartTimestamp, getVideoBroadcaster } from './twitch/twitch';
+import { reminderModalBuilder } from './reminderModalBuilder';
+import { addReminder } from './controllers/reminder';
 
 // Create a new client instance
 const client = new Client({ partials: ['USER', 'GUILD_MEMBER', 'CHANNEL', 'MESSAGE', 'REACTION'], intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS] });
@@ -241,6 +243,38 @@ client.on('interactionCreate', async interaction => {
         interaction.reply({ content: `Command: ${interaction.options.getString('command')} removed`, ephemeral: true })
       }
     })
+  }
+
+  if (commandName === 'reminder') {
+    //console.log("Reminder interaction received", `${interaction.user.username}#${interaction.user.discriminator} creating reminder in channel ${interaction.channel} at ${interaction.options.getString('reminder-time')} to ${interaction.options.getMentionable('mention')} with message: ${interaction.options.getString('message')}`, interaction.options.getMentionable('mention'));
+
+    fetchTimezoneByUserID(interaction.user.id).then(async val => {
+      if (val.length > 0) {
+        //console.log("Lookup: ", timeZoneLookup[val.at(0).timezone])
+        const date = chrono.parseDate(interaction.options.getString('reminder-time'), { timezone: timeZoneLookup[val[0].timezone] }, { forwardDate: true });
+        if(date){
+          const reminder = {serverID: interaction.guildId, channel: interaction.channel.id, sender: interaction.user.id, message: interaction.options.getString('message'), mention: interaction.options.getMentionable('mention').toString(), timestamp: Math.floor(date.getTime() / 1000)}
+          console.log("Reminder object", reminder);
+          const reminderId = addReminder(reminder);
+          interaction.reply({content: `Reminder Added for ${time(reminder.timestamp)}`, ephemeral: true})
+          const channel = client.channels.cache.get(reminder.channel);
+          if(channel instanceof TextChannel){
+            setTimeout(async () =>{ 
+              await reminderId;
+              channel.send(`reminder id: ${reminderId}`).catch(rejected => {
+                console.log(rejected);
+              }
+            )}, 5000)
+          }
+        }else{
+          interaction.reply({content: `reminder-time '${interaction.options.getString('reminder-time')}' was not recognized as a valid time.`, ephemeral: true})
+        }
+      }else{
+        interaction.reply({content: "You must first set a timezone using /time set <timezone>", ephemeral: true})
+      }
+    })
+
+    
   }
 });
 
