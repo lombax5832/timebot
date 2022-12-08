@@ -43,6 +43,6 @@ const deployCommands = async () => {
 	}
 };
 
-deployCommands();
+//deployCommands();
 
 export default deployCommands

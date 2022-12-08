@@ -18,7 +18,7 @@ import { IChannelReactionRules } from './models/channelReactionRules';
 import { initFFLogsGQL, getTimeSpentPerMech } from './fflogs/fflogs';
 import { initTwitch, getVideoStartTimestamp, getVideoBroadcaster } from './twitch/twitch';
 import { reminderModalBuilder } from './reminderModalBuilder';
-import { addReminder, fetchAllReminders, removeReminderById } from './controllers/reminder';
+import { addReminder, fetchAllReminders, removeReminderById, setReminderToUsedById } from './controllers/reminder';
 
 // Create a new client instance
 const client = new Client({ partials: ['USER', 'GUILD_MEMBER', 'CHANNEL', 'MESSAGE', 'REACTION'], intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS] });
@@ -95,20 +95,21 @@ const embedModalBuilder = (messageId) => {
 client.once('ready', async () => {
   deployCommands();
   console.log('Loading Reminders');
+
   const reminders = fetchAllReminders().then(val => {
     val.forEach(item => {
       const reminder = { serverID: item.serverID, channel: item.channel, sender: item.sender, message: item.message, mention: item.mention, timestamp: item.timestamp };
       const reminderTime = new Date(reminder.timestamp * 1000);
-      if(new Date() > reminderTime){
+      if(reminderTime > new Date()){
         scheduleReminder(item.id, reminder, reminderTime)
       }else{
         console.log("omitting and deleting expired reminder: ", item.id)
-        removeReminderById(item.id);
+        setReminderToUsedById(item.id);
       }
-      console.log(item.message)
     })
     console.log(val);
   });
+
   console.log('Ready!');
 });
 
@@ -447,7 +448,7 @@ const scheduleReminder = (reminderId: any, reminder: { serverID: string; channel
         console.log(rejected);
       }
       ).then(async () => {
-        removeReminderById(await reminderId);
+        setReminderToUsedById(await reminderId);
       });
     }
   }, date.getTime() - new Date().getTime());

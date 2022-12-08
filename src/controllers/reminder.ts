@@ -24,6 +24,30 @@ function removeReminder(reminder: { serverID: String, channel: String, timestamp
     Reminder.deleteOne(reminder)
 }
 
+function setReminderToUsedById(id: string): any {
+    console.log(`Removing reminder with id: "${id}"`);
+
+    Reminder.findByIdAndUpdate(id.toString(), { used: true }, { new: true }, (err, product) => {
+        if (err) {
+            console.error('setReminderToUsedById Error: ', err);
+            return err
+        } else {
+            console.log('successfully updated document with id:', id)
+            return product
+        }
+    })
+    /*
+        Reminder.findByIdAndDelete(id.toString(), (err, product) => {
+            if (err) {
+                console.error('removeReminderById Error: ', err);
+                return err
+            } else {
+                console.log('successfully removed document with id:', id)
+                return product
+            }
+        });*/
+}
+
 function removeReminderById(id: string): any {
     console.log(`Removing reminder with id: "${id}"`);
 
@@ -41,7 +65,7 @@ function removeReminderById(id: string): any {
 async function fetchAllReminders(): Promise<any[]> {
     const promise = new Promise<Object[]>((resolve, reject) => {
         let response: any = "f";
-        Reminder.find({})
+        Reminder.find({ used: null })
             .then(result => {
                 resolve(result)
             })
@@ -52,4 +76,4 @@ async function fetchAllReminders(): Promise<any[]> {
 
     return promise
 }
-export { addReminder, removeReminder, removeReminderById, fetchAllReminders };
+export { addReminder, removeReminder, removeReminderById, setReminderToUsedById, fetchAllReminders };
