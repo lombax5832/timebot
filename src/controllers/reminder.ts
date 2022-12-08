@@ -1,3 +1,4 @@
+import mongoose, { Mongoose } from 'mongoose';
 import Reminder from '../models/reminder';
 
 function addReminder(reminder: { serverID: String, channel: String, sender: String, message: string, mention: string, timestamp: number }): any {
@@ -17,16 +18,30 @@ function addReminder(reminder: { serverID: String, channel: String, sender: Stri
     return newcommand.id;
 }
 
-function removeReminder(command: { serverID: String, channel: String, timestamp: String }): any {
-    console.log(`Removing reminder: `, command);
+function removeReminder(reminder: { serverID: String, channel: String, timestamp: String }): any {
+    console.log(`Removing reminder: `, reminder);
 
-    Reminder.deleteOne(command)
+    Reminder.deleteOne(reminder)
 }
 
-async function fetchAllReminders(serverID: String): Promise<any[]> {
+function removeReminderById(id: string): any {
+    console.log(`Removing reminder with id: "${id}"`);
+
+    Reminder.findByIdAndDelete(id.toString(), (err, product) => {
+        if (err) {
+            console.error('removeReminderById Error: ', err);
+            return err
+        } else {
+            console.log('successfully removed document with id:', id)
+            return product
+        }
+    });
+}
+
+async function fetchAllReminders(): Promise<any[]> {
     const promise = new Promise<Object[]>((resolve, reject) => {
         let response: any = "f";
-        Reminder.find({ })
+        Reminder.find({})
             .then(result => {
                 resolve(result)
             })
@@ -37,4 +52,4 @@ async function fetchAllReminders(serverID: String): Promise<any[]> {
 
     return promise
 }
-export { addReminder, removeReminder, fetchAllReminders };
+export { addReminder, removeReminder, removeReminderById, fetchAllReminders };

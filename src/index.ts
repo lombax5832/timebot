@@ -18,7 +18,7 @@ import { IChannelReactionRules } from './models/channelReactionRules';
 import { initFFLogsGQL, getTimeSpentPerMech } from './fflogs/fflogs';
 import { initTwitch, getVideoStartTimestamp, getVideoBroadcaster } from './twitch/twitch';
 import { reminderModalBuilder } from './reminderModalBuilder';
-import { addReminder } from './controllers/reminder';
+import { addReminder, fetchAllReminders, removeReminderById } from './controllers/reminder';
 
 // Create a new client instance
 const client = new Client({ partials: ['USER', 'GUILD_MEMBER', 'CHANNEL', 'MESSAGE', 'REACTION'], intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS] });
@@ -93,7 +93,22 @@ const embedModalBuilder = (messageId) => {
 
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
-  //await deployCommands();
+  deployCommands();
+  console.log('Loading Reminders');
+  const reminders = fetchAllReminders().then(val => {
+    val.forEach(item => {
+      const reminder = { serverID: item.serverID, channel: item.channel, sender: item.sender, message: item.message, mention: item.mention, timestamp: item.timestamp };
+      const reminderTime = new Date(reminder.timestamp * 1000);
+      if(new Date() > reminderTime){
+        scheduleReminder(item.id, reminder, reminderTime)
+      }else{
+        console.log("omitting and deleting expired reminder: ", item.id)
+        removeReminderById(item.id);
+      }
+      console.log(item.message)
+    })
+    console.log(val);
+  });
   console.log('Ready!');
 });
 
@@ -252,29 +267,22 @@ client.on('interactionCreate', async interaction => {
       if (val.length > 0) {
         //console.log("Lookup: ", timeZoneLookup[val.at(0).timezone])
         const date = chrono.parseDate(interaction.options.getString('reminder-time'), { timezone: timeZoneLookup[val[0].timezone] }, { forwardDate: true });
-        if(date){
-          const reminder = {serverID: interaction.guildId, channel: interaction.channel.id, sender: interaction.user.id, message: interaction.options.getString('message'), mention: interaction.options.getMentionable('mention').toString(), timestamp: Math.floor(date.getTime() / 1000)}
+        if (date) {
+          const reminder = { serverID: interaction.guildId, channel: interaction.channel.id, sender: interaction.user.id, message: interaction.options.getString('message'), mention: interaction.options.getMentionable('mention').toString(), timestamp: Math.floor(date.getTime() / 1000) }
           console.log("Reminder object", reminder);
           const reminderId = addReminder(reminder);
-          interaction.reply({content: `Reminder Added for ${time(reminder.timestamp)}`, ephemeral: true})
+          interaction.reply({ content: `Reminder Added for ${time(reminder.timestamp)}`, ephemeral: true })
           const channel = client.channels.cache.get(reminder.channel);
-          if(channel instanceof TextChannel){
-            setTimeout(async () =>{ 
-              await reminderId;
-              channel.send(`reminder id: ${reminderId}`).catch(rejected => {
-                console.log(rejected);
-              }
-            )}, 5000)
+          if (channel instanceof TextChannel) {
+            scheduleReminder(reminderId, reminder, date);
           }
-        }else{
-          interaction.reply({content: `reminder-time '${interaction.options.getString('reminder-time')}' was not recognized as a valid time.`, ephemeral: true})
+        } else {
+          interaction.reply({ content: `reminder-time '${interaction.options.getString('reminder-time')}' was not recognized as a valid time.`, ephemeral: true })
         }
-      }else{
-        interaction.reply({content: "You must first set a timezone using /time set <timezone>", ephemeral: true})
+      } else {
+        interaction.reply({ content: "You must first set a timezone using /time set <timezone>", ephemeral: true })
       }
     })
-
-    
   }
 });
 
@@ -430,3 +438,18 @@ client.on('messageReactionAdd', async (messageReaction: MessageReaction, user: U
 
 // Login to Discord with your client's token
 client.login(process.env.CLIENT_TOKEN);
+const scheduleReminder = (reminderId: any, reminder: { serverID: string; channel: string; sender: string; message: string; mention: string; timestamp: number; }, date: Date) => {
+  setTimeout(async () => {
+    await reminderId;
+    const channel = client.channels.cache.get(reminder.channel)
+    if (channel instanceof TextChannel) {
+      channel.send(`${reminder.mention}\n${reminder.message}`).catch(rejected => {
+        console.log(rejected);
+      }
+      ).then(async () => {
+        removeReminderById(await reminderId);
+      });
+    }
+  }, date.getTime() - new Date().getTime());
+}
+
