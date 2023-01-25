@@ -312,12 +312,17 @@ client.on('interactionCreate', async interaction => {
             const filterEmbed = filterVodEmbedBuilder(null, fflogsFilter, code.groups.code, data.reportData.report.startTime)
             let vodLinks = [];
             embedData.forEach((element, i) => {
-              vodLinks[Math.floor(i / 25)] ? vodLinks[Math.floor(i / 25)].push(element.vodURL) : vodLinks.push([element.vodURL])
+              vodLinks[Math.floor(i / 16)] ? vodLinks[Math.floor(i / 16)].push(element.vodURL) : vodLinks.push([element.vodURL])
             });
             filterEmbed.setDescription(`Filter used:\n${inlineCode(fflogsFilter)}`)
             filterEmbed.addFields(vodLinks.map(row => { return { name: ' ', value: row.join(' ') } }))
             console.log(vodLinks);
-            interaction.reply({ embeds: [filterEmbed] })
+            console.log("Length:", filterEmbed.length)
+            if (filterEmbed.length >= 6000) {
+              interaction.reply(`Embed was too large to send, used ${filterEmbed.length} out of 6000 characters`)
+            } else {
+              interaction.reply({ embeds: [filterEmbed], ephemeral: true })
+            }
           }
         }
       }
