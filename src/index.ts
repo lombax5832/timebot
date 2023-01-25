@@ -15,7 +15,7 @@ import { addCommand, fetchCommandsByServerID, removeCommand } from './controller
 import { fetchServerWhitelistByServerID } from './controllers/serverWhitelist';
 import { fetchRulesByServerChannelID } from './controllers/channelReactionRules';
 import { IChannelReactionRules } from './models/channelReactionRules';
-import { initFFLogsGQL, getTimeSpentPerMech } from './fflogs/fflogs';
+import { initFFLogsGQL, getTimeSpentPerMech, getFilterTimestamps } from './fflogs/fflogs';
 import { initTwitch, getVideoStartTimestamp, getVideoBroadcaster } from './twitch/twitch';
 import { reminderModalBuilder } from './reminderModalBuilder';
 import { addReminder, fetchAllReminders, removeReminderById, setReminderToUsedById } from './controllers/reminder';
@@ -46,7 +46,14 @@ const timeZonesEmbed = new MessageEmbed()
   .setTitle('Timezones List')
   .addFields(timezoneListChunks.map((val) => { return { name: '\u200B', value: val.join('\n'), inline: true } }));
 
-const resultDictEmbedBuilder = (resultSet, startTimestmap, url, vods?, timestamps?) => new MessageEmbed()
+const filterVodEmbedBuilder = (embedData, filterString, url, startTimestamp) => new MessageEmbed()
+  .setTitle('FFlogs Twitch VOD Filter')
+  .setThumbnail("https://assets.rpglogs.com/img/ff/favicon.png")
+  .setURL("https://www.fflogs.com/reports/" + url)
+  .setFooter({ text: "Log From" })
+  .setTimestamp(startTimestamp);
+
+const resultDictEmbedBuilder = (resultSet, startTimestamp, url, vods?, timestamps?) => new MessageEmbed()
   .setTitle('Time Spent on Mechanics')
   .setThumbnail("https://assets.rpglogs.com/img/ff/favicon.png")
   .setURL("https://" + url)
@@ -72,7 +79,7 @@ const resultDictEmbedBuilder = (resultSet, startTimestmap, url, vods?, timestamp
     }
   }))
   .setFooter({ text: "Log From" })
-  .setTimestamp(startTimestmap)
+  .setTimestamp(startTimestamp)
 
 const embedModalBuilder = (messageId) => {
   const modal = new Modal()
@@ -100,9 +107,9 @@ client.once('ready', async () => {
     val.forEach(item => {
       const reminder = { serverID: item.serverID, channel: item.channel, sender: item.sender, message: item.message, mention: item.mention, timestamp: item.timestamp };
       const reminderTime = new Date(reminder.timestamp * 1000);
-      if(reminderTime > new Date()){
+      if (reminderTime > new Date()) {
         scheduleReminder(item.id, reminder, reminderTime)
-      }else{
+      } else {
         console.log("omitting and deleting expired reminder: ", item.id)
         setReminderToUsedById(item.id);
       }
@@ -284,6 +291,39 @@ client.on('interactionCreate', async interaction => {
         interaction.reply({ content: "You must first set a timezone using /time set <timezone>", ephemeral: true })
       }
     })
+  }
+
+  if (commandName === 'vod-search') {
+    try {
+      const fflogsURL = interaction.options.getString('fflogs-url');
+      const fflogsFilter = interaction.options.getString('filter-string');
+      const code = fflogsURL.match(ffReportRegex);
+      const twitchCode = interaction.options.getString('twitch-url').match(twitchVidRegex);
+      if (twitchCode?.groups?.code) {
+        const vidStartTime = await getVideoStartTimestamp(await twitch, twitchCode.groups.code)
+        if (vidStartTime > 0) {
+
+          if (code?.groups?.code) {
+            const data = await getFilterTimestamps(code.groups.code, fflogsFilter.replace(/"/g, '\\\"'), await ffGql).catch()
+            const offsetStartTime = data.reportData.report.startTime - vidStartTime;
+            const embedData = data.reportData.report.events.data.map((event, i) => { return { index: i + 1, newTime: (offsetStartTime + event.timestamp) / 1000, time: event.timestamp, nice: event.fight, vodURL: `[${i + 1}](https://www.twitch.tv/videos/${twitchCode.groups.code}?t=${Math.floor((offsetStartTime + event.timestamp) / 1000)}s)` } })
+            console.log(data);
+            console.log(data.reportData.report.events.data)
+            const filterEmbed = filterVodEmbedBuilder(null, fflogsFilter, code.groups.code, data.reportData.report.startTime)
+            let vodLinks = [];
+            embedData.forEach((element, i) => {
+              vodLinks[Math.floor(i / 25)] ? vodLinks[Math.floor(i / 25)].push(element.vodURL) : vodLinks.push([element.vodURL])
+            });
+            filterEmbed.setDescription(`Filter used:\n${inlineCode(fflogsFilter)}`)
+            filterEmbed.addFields(vodLinks.map(row => { return { name: ' ', value: row.join(' ') } }))
+            console.log(vodLinks);
+            interaction.reply({ embeds: [filterEmbed] })
+          }
+        }
+      }
+    } catch (error) {
+      console.log(error)
+    }
   }
 });
 

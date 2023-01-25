@@ -77,12 +77,16 @@ const initFFLogsGQL = async () => {
 }
 
 const getReportGql = async (ffGql: GraphQLClient, code: string) => {
+    return getReportCustomExpressionGql(ffGql, code, "actor.type = NPC AND type = 'cast' AND (ability.id in (25555,25569,26381,27529,27538,27957,27956,27973,29752,28060,29453,28058,31027,31002,30962,31032,31148,31163,30189,31491,31499))");
+}
+
+const getReportCustomExpressionGql = async (ffGql: GraphQLClient, code: string, expression: string) => {
     const query = gql`
     {
         reportData {
             report(code: "${code}") {
                 events(
-                    filterExpression: "actor.type = NPC AND type = 'cast' AND (ability.id in (25555,25569,26381,27529,27538,27957,27956,27973,29752,28060,29453,28058,31027,31002,30962,31032,31148,31163,30189,31491,31499))"
+                    filterExpression: "${expression}"
                     endTime: 9999999999999
                     useAbilityIDs: false
                     limit: 4000
@@ -116,6 +120,11 @@ const getReport = async (sdk: ReturnType<typeof getSdk>, code: number) => {
     } catch (error) {
         console.log('An error occurred.', error.response)
     }
+}
+
+const getFilterTimestamps = async (code: string, filter: string, ffGql) => {
+    const data = await getReportCustomExpressionGql(ffGql, code, filter)
+    return data;
 }
 
 const getTimeSpentPerMech = async (code: string, ffGql) => {
@@ -216,4 +225,4 @@ initFFLogs().then((ffSdk) => {
     getReport(ffSdk, 8436496);
 });*/
 
-export { initFFLogsGQL, getTimeSpentPerMech }
+export { initFFLogsGQL, getTimeSpentPerMech, getFilterTimestamps }

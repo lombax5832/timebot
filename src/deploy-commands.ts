@@ -23,7 +23,11 @@ const commands = [
 		.addStringOption(option => option.setName('reminder-time').setDescription('When to send the reminder?').setRequired(true))
 		.addMentionableOption(option => option.setName('mention').setDescription('Who to ping with the reminder?').setRequired(true))
 		.addStringOption(option => option.setName('message').setDescription('Reminder message').setRequired(true))
-		.setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
+		.setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
+	new SlashCommandBuilder().setName('vod-search').setDescription('Use an fflogs filter on a vod to find certain event occurrences')
+		.addStringOption(option => option.setName('fflogs-url').setDescription('Link to fflogs report').setRequired(true))
+		.addStringOption(option => option.setName('twitch-url').setDescription('Link to twitch VOD').setRequired(true))
+		.addStringOption(option => option.setName('filter-string').setDescription('Valid fflogs filter string').setRequired(true))
 ]
 	.map(command => command.toJSON());
 
