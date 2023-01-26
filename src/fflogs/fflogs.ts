@@ -27,7 +27,8 @@ const timeline: String[] = [
     "Natural Alignment 2",
     "High Concept 2",
     "Program Loop",
-    "Pantokrator"
+    "Pantokrator",
+    "Party Synergy"
 ]
 
 async function getAccessToken() {
@@ -77,7 +78,7 @@ const initFFLogsGQL = async () => {
 }
 
 const getReportGql = async (ffGql: GraphQLClient, code: string) => {
-    return getReportCustomExpressionGql(ffGql, code, "actor.type = NPC AND type = 'cast' AND (ability.id in (25555,25569,26381,27529,27538,27957,27956,27973,29752,28060,29453,28058,31027,31002,30962,31032,31148,31163,30189,31491,31499))");
+    return getReportCustomExpressionGql(ffGql, code, "actor.type = NPC AND type = 'cast' AND (ability.id in (25555,25569,26381,27529,27538,27957,27956,27973,29752,28060,29453,28058,31027,31002,30962,31032,31148,31163,30189,31491,31499,31551))");
 }
 
 const getReportCustomExpressionGql = async (ffGql: GraphQLClient, code: string, expression: string) => {
