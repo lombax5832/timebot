@@ -319,9 +319,9 @@ client.on('interactionCreate', async interaction => {
             console.log(vodLinks);
             console.log("Length:", filterEmbed.length)
             if (filterEmbed.length >= 6000) {
-              interaction.reply(`Embed was too large to send, used ${filterEmbed.length} out of 6000 characters`)
+              interaction.reply({ content: `Embed was too large to send, used ${filterEmbed.length} out of 6000 characters`, ephemeral: true})
             } else {
-              interaction.reply({ embeds: [filterEmbed], ephemeral: true })
+              interaction.reply({ embeds: [filterEmbed] })
             }
           }
         }
