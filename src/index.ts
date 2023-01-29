@@ -16,7 +16,7 @@ import { fetchServerWhitelistByServerID } from './controllers/serverWhitelist';
 import { fetchRulesByServerChannelID } from './controllers/channelReactionRules';
 import { IChannelReactionRules } from './models/channelReactionRules';
 import { initFFLogsGQL, getTimeSpentPerMech, getFilterTimestamps } from './fflogs/fflogs';
-import { initTwitch, getVideoStartTimestamp, getVideoBroadcaster } from './twitch/twitch';
+import { initTwitch, getVideoStartTimestamp, getVideoBroadcaster, getVideoDurationSeconds } from './twitch/twitch';
 import { reminderModalBuilder } from './reminderModalBuilder';
 import { addReminder, fetchAllReminders, removeReminderById, setReminderToUsedById } from './controllers/reminder';
 
@@ -65,7 +65,7 @@ const resultDictEmbedBuilder = (resultSet, startTimestamp, url, vods?, timestamp
     let vodLinks = []
     let vodLinkstring = "";
     vods?.forEach((vod) => {
-      if (timestamps) {
+      if (timestamps && vodLinkstring.length < 1950) {
         console.log("startTime: ", vod.startTime, "timestamps: ", timestamps[mech.name])
         vodLinks.push(`${vod.broadcaster}: ` + timestamps[mech.name].map((timestamp, i) => `[${i + 1}](https://www.twitch.tv/videos/${vod.url}?t=${Math.floor((timestamp - vod.startTime) / 1000)}s)`).join(' '))
       }
@@ -300,15 +300,23 @@ client.on('interactionCreate', async interaction => {
       const code = fflogsURL.match(ffReportRegex);
       const twitchCode = interaction.options.getString('twitch-url').match(twitchVidRegex);
       if (twitchCode?.groups?.code) {
+        interaction.deferReply()
         const vidStartTime = await getVideoStartTimestamp(await twitch, twitchCode.groups.code)
+        const vidDuration = await getVideoDurationSeconds(await twitch, twitchCode.groups.code)
         if (vidStartTime > 0) {
 
           if (code?.groups?.code) {
             const data = await getFilterTimestamps(code.groups.code, fflogsFilter.replace(/"/g, '\\\"'), await ffGql).catch()
             const offsetStartTime = data.reportData.report.startTime - vidStartTime;
-            const embedData = data.reportData.report.events.data.map((event, i) => { return { index: i + 1, newTime: (offsetStartTime + event.timestamp) / 1000, time: event.timestamp, nice: event.fight, vodURL: `[${i + 1}](https://www.twitch.tv/videos/${twitchCode.groups.code}?t=${Math.floor((offsetStartTime + event.timestamp) / 1000)}s)` } })
+            const timestamps = []
+            data.reportData.report.events.data.forEach(event => {
+              if (((offsetStartTime + event.timestamp) / 1000) > 0 && ((offsetStartTime + event.timestamp) / 1000) < vidDuration) {
+                timestamps.push({ timestamp: event.timestamp, fight: event.fight })
+              }
+            });
+            const embedData = timestamps.map((event, i) => { return { index: i + 1, newTime: (offsetStartTime + event.timestamp) / 1000, time: event.timestamp, nice: event.fight, vodURL: `[${i + 1}](https://www.twitch.tv/videos/${twitchCode.groups.code}?t=${Math.floor((offsetStartTime + event.timestamp) / 1000)}s)` } })
             console.log(data);
-            console.log(data.reportData.report.events.data)
+            //console.log(data.reportData.report.events.data)
             const filterEmbed = filterVodEmbedBuilder(null, fflogsFilter, code.groups.code, data.reportData.report.startTime)
             let vodLinks = [];
             embedData.forEach((element, i) => {
@@ -319,9 +327,9 @@ client.on('interactionCreate', async interaction => {
             console.log(vodLinks);
             console.log("Length:", filterEmbed.length)
             if (filterEmbed.length >= 6000) {
-              interaction.reply({ content: `Embed was too large to send, used ${filterEmbed.length} out of 6000 characters`, ephemeral: true})
+              interaction.editReply({ content: `Embed was too large to send, used ${filterEmbed.length} out of 6000 characters` })
             } else {
-              interaction.reply({ embeds: [filterEmbed] })
+              interaction.editReply({ embeds: [filterEmbed] })
             }
           }
         }
