@@ -34,7 +34,7 @@ const timeline: String[] = [
     "Hello, World",
     "Oversampled Wave Cannon",
     "P4",
-    "Run: ****mi* (Delta Version)"
+    "Run: \*\*\*\*mi* (Delta Version)"
 ]
 
 async function getAccessToken() {
@@ -188,6 +188,9 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
             }
             if (reportDict[fight.id].name == "unknown_7b7a") {
                 reportDict[fight.id].name = "P4";
+            }
+            if (reportDict[fight.id].name == "Run: ****mi* (Delta Version)") {
+                reportDict[fight.id].name = "Run: \*\*\*\*mi* (Delta Version)";
             }
         }
     });
