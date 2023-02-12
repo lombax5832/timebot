@@ -34,7 +34,9 @@ const timeline: String[] = [
     "Hello, World",
     "Oversampled Wave Cannon",
     "P4",
-    "Run: \\*\\*\\*\\*mi* (Delta Version)"
+    "Run: \\*\\*\\*\\*mi* (Delta Version)",
+    "Run: \\*\\*\\*\\*mi* (Sigma Version)",
+    "Run: \\*\\*\\*\\*mi* (Omega Version)"
 ]
 
 async function getAccessToken() {
@@ -84,7 +86,7 @@ const initFFLogsGQL = async () => {
 }
 
 const getReportGql = async (ffGql: GraphQLClient, code: string) => {
-    return getReportCustomExpressionGql(ffGql, code, "actor.type = NPC AND MATCHED type = 'cast' AND ability.name in ('Oversampled Wave Cannon') IN (1) END OR type = 'cast' AND ability.id in (25555,25569,26381,27529,27538,27957,27956,27973,29752,28060,29453,28058,31027,31002,30962,31032,31148,31163,30189,31491,31499,31551,31544,31507,31573,31610,31624)");
+    return getReportCustomExpressionGql(ffGql, code, "actor.type = NPC AND MATCHED type = 'cast' AND ability.name in ('Oversampled Wave Cannon') IN (1) END OR type = 'cast' AND ability.id in (25555,25569,26381,27529,27538,27957,27956,27973,29752,28060,29453,28058,31027,31002,30962,31032,31148,31163,30189,31491,31499,31551,31544,31507,31573,31610,31624,32788,32789)");
 }
 
 const getReportCustomExpressionGql = async (ffGql: GraphQLClient, code: string, expression: string) => {
@@ -191,6 +193,12 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
             }
             if (reportDict[fight.id].name == "Run: ****mi* (Delta Version)") {
                 reportDict[fight.id].name = "Run: \\*\\*\\*\\*mi* (Delta Version)";
+            }
+            if (reportDict[fight.id].name == "Run: ****mi* (Sigma Version)") {
+                reportDict[fight.id].name = "Run: \\*\\*\\*\\*mi* (Sigma Version)";
+            }
+            if (reportDict[fight.id].name == "Run: ****mi* (Omega Version)") {
+                reportDict[fight.id].name = "Run: \\*\\*\\*\\*mi* (Omega Version)";
             }
         }
     });
