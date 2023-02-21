@@ -36,7 +36,13 @@ const timeline: String[] = [
     "P4",
     "Run: \\*\\*\\*\\*mi* (Delta Version)",
     "Run: \\*\\*\\*\\*mi* (Sigma Version)",
-    "Run: \\*\\*\\*\\*mi* (Omega Version)"
+    "Run: \\*\\*\\*\\*mi* (Omega Version)",
+    "Cosmo Memory",
+    "Cosmo Arrow 1",
+    "Unlimited Wave Cannon 1",
+    "Cosmo Arrow 2",
+    "Unlimited Wave Cannon 2"
+
 ]
 
 async function getAccessToken() {
@@ -86,7 +92,7 @@ const initFFLogsGQL = async () => {
 }
 
 const getReportGql = async (ffGql: GraphQLClient, code: string) => {
-    return getReportCustomExpressionGql(ffGql, code, "actor.type = NPC AND MATCHED type = 'cast' AND ability.name in ('Oversampled Wave Cannon') IN (1) END OR type = 'cast' AND ability.id in (25555,25569,26381,27529,27538,27957,27956,27973,29752,28060,29453,28058,31027,31002,30962,31032,31148,31163,30189,31491,31499,31551,31544,31507,31573,31610,31624,32788,32789)");
+    return getReportCustomExpressionGql(ffGql, code, "actor.type = NPC AND MATCHED type = 'cast' AND ability.name in ('Oversampled Wave Cannon') IN (1) END OR type = 'begincast' AND source.class = 'boss' AND ability.name in ('Cosmo Arrow') OR type = 'cast' AND ability.id in (25555,25569,26381,27529,27538,27957,27956,27973,29752,28060,29453,28058,31027,31002,30962,31032,31148,31163,30189,31491,31499,31551,31544,31507,31573,31610,31624,32788,32789,31649,31660)");
 }
 
 const getReportCustomExpressionGql = async (ffGql: GraphQLClient, code: string, expression: string) => {
@@ -199,6 +205,15 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
             }
             if (reportDict[fight.id].name == "Run: ****mi* (Omega Version)") {
                 reportDict[fight.id].name = "Run: \\*\\*\\*\\*mi* (Omega Version)";
+            }
+            if (reportDict[fight.id].name == "Cosmo Memory") {
+                reportDict[fight.id].name = "P6";
+            }
+            if (reportDict[fight.id].name == "Cosmo Arrow") {
+                reportDict[fight.id].name = "Cosmo Arrow " + (reportDict[fight.id].duration < 920 ? '1' : '2');
+            }
+            if (reportDict[fight.id].name == "Unlimited Wave Cannon") {
+                reportDict[fight.id].name = "Unlimited Wave Cannon " + (reportDict[fight.id].duration < 970 ? '1' : '2');
             }
         }
     });
