@@ -37,12 +37,12 @@ const timeline: String[] = [
     "Run: \\*\\*\\*\\*mi* (Delta Version)",
     "Run: \\*\\*\\*\\*mi* (Sigma Version)",
     "Run: \\*\\*\\*\\*mi* (Omega Version)",
+    "P6",
     "Cosmo Memory",
     "Cosmo Arrow 1",
     "Unlimited Wave Cannon 1",
     "Cosmo Arrow 2",
     "Unlimited Wave Cannon 2"
-
 ]
 
 async function getAccessToken() {
