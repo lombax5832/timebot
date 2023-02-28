@@ -210,7 +210,7 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
                 reportDict[fight.id].name = "P6";
             }
             if (reportDict[fight.id].name == "Cosmo Arrow") {
-                reportDict[fight.id].name = "Cosmo Arrow " + (reportDict[fight.id].duration < 920 ? '1' : '2');
+                reportDict[fight.id].name = "Cosmo Arrow " + (reportDict[fight.id].duration > 965 ? '2' : '1');
             }
             if (reportDict[fight.id].name == "Unlimited Wave Cannon") {
                 reportDict[fight.id].name = "Unlimited Wave Cannon " + (reportDict[fight.id].duration < 970 ? '1' : '2');
