@@ -5,10 +5,10 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') }); //initia
 import mongoose from 'mongoose';
 import { fetchTimezoneByUserID, updateUser } from './controllers/timezones';
 import { getTimeZones } from "@vvo/tzdb";
-import { inlineCode, time, userMention } from '@discordjs/builders';
+import { ButtonBuilder, inlineCode, time, userMention } from '@discordjs/builders';
 import * as chrono from 'chrono-node';
 import deployCommands from './deploy-commands';
-import { Client, Intents, Message, MessageActionRow, MessageButton, MessageEmbed, MessageReaction, Modal, ModalActionRowComponent, TextChannel, TextInputComponent, User } from 'discord.js';
+import { Client, Message, MessageReaction, TextChannel, User, Partials, Events, TextInputStyle, EmbedBuilder, ModalBuilder, ActionRowBuilder, ModalActionRowComponentBuilder, TextInputBuilder, ButtonStyle } from 'discord.js';
 import { chunkArray } from './util';
 import { fetchKeywordReactByUserID } from './controllers/keywordReact';
 import { addCommand, fetchCommandsByServerID, removeCommand } from './controllers/commands';
@@ -21,7 +21,7 @@ import { reminderModalBuilder } from './reminderModalBuilder';
 import { addReminder, fetchAllReminders, removeReminderById, setReminderToUsedById } from './controllers/reminder';
 
 // Create a new client instance
-const client = new Client({ partials: ['USER', 'GUILD_MEMBER', 'CHANNEL', 'MESSAGE', 'REACTION'], intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS] });
+const client = new Client({ partials: [Partials.User, Partials.GuildMember, Partials.Channel, Partials.Message, Partials.Reaction], intents: ['Guilds', 'GuildMessages', 'GuildEmojisAndStickers', 'GuildMessageReactions', 'MessageContent'] });
 
 const mongoDB = process.env.DB;
 mongoose.connect(mongoDB);
@@ -42,18 +42,18 @@ getTimeZones().forEach((val) => {
   timezoneListString += `${val.name}\n`
 })
 
-const timeZonesEmbed = new MessageEmbed()
+const timeZonesEmbed = new EmbedBuilder()
   .setTitle('Timezones List')
   .addFields(timezoneListChunks.map((val) => { return { name: '\u200B', value: val.join('\n'), inline: true } }));
 
-const filterVodEmbedBuilder = (embedData, filterString, url, startTimestamp) => new MessageEmbed()
+const filterVodEmbedBuilder = (embedData, filterString, url, startTimestamp) => new EmbedBuilder()
   .setTitle('FFlogs Twitch VOD Filter')
   .setThumbnail("https://assets.rpglogs.com/img/ff/favicon.png")
   .setURL("https://www.fflogs.com/reports/" + url)
   .setFooter({ text: "Log From" })
   .setTimestamp(startTimestamp);
 
-const resultDictEmbedBuilder = (resultSet, startTimestamp, url, vods?, timestamps?) => new MessageEmbed()
+const resultDictEmbedBuilder = (resultSet, startTimestamp, url, vods?, timestamps?) => new EmbedBuilder()
   .setTitle('Time Spent on Mechanics')
   .setThumbnail("https://assets.rpglogs.com/img/ff/favicon.png")
   .setURL("https://" + url)
@@ -82,21 +82,23 @@ const resultDictEmbedBuilder = (resultSet, startTimestamp, url, vods?, timestamp
   .setTimestamp(startTimestamp)
 
 const embedModalBuilder = (messageId) => {
-  const modal = new Modal()
+  const modal = new ModalBuilder()
     .setCustomId("addVideo")
     .setTitle("Add a VOD")
 
-  const videoURL = new TextInputComponent()
+  const videoURL = new TextInputBuilder()
     .setCustomId('vodURL')
     .setLabel("VOD URL")
-    .setStyle('SHORT')
+    .setStyle(TextInputStyle.Short)
 
-  const firstActionRow = new MessageActionRow<ModalActionRowComponent>().addComponents(videoURL);
+  const firstActionRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(videoURL);
 
   modal.addComponents(firstActionRow);
 
   return modal;
 }
+
+
 
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
@@ -149,12 +151,12 @@ client.on('interactionCreate', async interaction => {
 
           });
         }
-        const row = new MessageActionRow()
+        const row = new ActionRowBuilder()
           .addComponents(
-            new MessageButton()
+            new ButtonBuilder()
               .setCustomId('addVideo')
               .setLabel('Attach a VOD')
-              .setStyle('PRIMARY'),
+              .setStyle(ButtonStyle.Primary),
           )
         let oldMessage = await fflogsEmbedCache[message.id].message
         fflogsEmbedCache[message.id].vods.push({ url: code.groups.code, sender: interaction.user, startTime: vidStartTime, broadcaster: vidBroadcaster })
@@ -172,8 +174,8 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-client.on('interactionCreate', async interaction => {
-  if (!interaction.isCommand()) return;
+client.on(Events.InteractionCreate, async interaction => {
+  if (!interaction.isChatInputCommand()) return;
 
   const { commandName, user } = interaction;
 
@@ -325,9 +327,9 @@ client.on('interactionCreate', async interaction => {
             filterEmbed.setDescription(`Filter used:\n${inlineCode(fflogsFilter)}`)
             filterEmbed.addFields(vodLinks.map(row => { return { name: ' ', value: row.join(' ') } }))
             console.log(vodLinks);
-            console.log("Length:", filterEmbed.length)
-            if (filterEmbed.length >= 6000) {
-              interaction.editReply({ content: `Embed was too large to send, used ${filterEmbed.length} out of 6000 characters` })
+            console.log("Length:", JSON.stringify(filterEmbed.toJSON()).length)
+            if (JSON.stringify(filterEmbed.toJSON()).length >= 6000) {
+              interaction.editReply({ content: `Embed was too large to send, used ${JSON.stringify(filterEmbed.toJSON()).length} out of 6000 characters` })
             } else {
               interaction.editReply({ embeds: [filterEmbed] })
             }
@@ -388,12 +390,12 @@ client.on('messageCreate', async (message: Message) => {
     message.channel.sendTyping();
     const { resultSet, timestamps, startTimestamp } = await getTimeSpentPerMech(code.groups.code, await ffGql)
     if (resultSet.length > 0) {
-      const row = new MessageActionRow()
+      const row = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
-          new MessageButton()
+          new ButtonBuilder()
             .setCustomId('addVideo')
             .setLabel('Attach a VOD')
-            .setStyle('PRIMARY'),
+            .setStyle(ButtonStyle.Primary),
         );
       let reply = await message.reply({ embeds: [resultDictEmbedBuilder(resultSet, startTimestamp, code[0])], components: [row] });
 

@@ -1,28 +1,27 @@
-import { CommandInteraction, CacheType, TextInputComponent, Modal, ModalActionRowComponent, MessageActionRow } from 'discord.js';
-import { TextInputStyles } from 'discord.js/typings/enums';
+import { CommandInteraction, CacheType, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ModalActionRowComponentBuilder } from "discord.js";
 
 const reminderModalBuilder = (interaction: CommandInteraction<CacheType>) => {
 
-  const modal = new Modal()
+  const modal = new ModalBuilder()
     .setCustomId("addReminder")
     .setTitle("Create a Reminder");
 
-  const timestamp = new TextInputComponent()
+  const timestamp = new TextInputBuilder()
     .setCustomId('timestamp')
     .setLabel('When should the reminder be sent?')
     .setPlaceholder('on 12/5 at 5pm')
-    .setStyle(TextInputStyles.SHORT)
+    .setStyle(TextInputStyle.Short)
     .setRequired(true);
 
-  const message = new TextInputComponent()
+  const message = new TextInputBuilder()
     .setCustomId('message')
     .setLabel('Reminder Message')
     .setPlaceholder('@raiders We have raid in an hour')
-    .setStyle(TextInputStyles.PARAGRAPH)
+    .setStyle(TextInputStyle.Paragraph)
     .setRequired(true);
 
-  const firstRow = new MessageActionRow<ModalActionRowComponent>().addComponents(timestamp);
-  const secondRow = new MessageActionRow<ModalActionRowComponent>().addComponents(message);
+  const firstRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(timestamp);
+  const secondRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(message);
 
   modal.addComponents(firstRow, secondRow);
 
