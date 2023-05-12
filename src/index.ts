@@ -9,7 +9,7 @@ import { ButtonBuilder, inlineCode, time, userMention } from '@discordjs/builder
 import * as chrono from 'chrono-node';
 import deployCommands from './deploy-commands';
 import { Client, Message, MessageReaction, TextChannel, User, Partials, Events, TextInputStyle, EmbedBuilder, ModalBuilder, ActionRowBuilder, ModalActionRowComponentBuilder, TextInputBuilder, ButtonStyle } from 'discord.js';
-import { chunkArray } from './util';
+import { chunkArray, createChart } from './util';
 import { fetchKeywordReactByUserID } from './controllers/keywordReact';
 import { addCommand, fetchCommandsByServerID, removeCommand } from './controllers/commands';
 import { fetchServerWhitelistByServerID } from './controllers/serverWhitelist';
@@ -17,9 +17,9 @@ import { fetchRulesByServerChannelID } from './controllers/channelReactionRules'
 import { IChannelReactionRules } from './models/channelReactionRules';
 import { initFFLogsGQL, getTimeSpentPerMech, getFilterTimestamps } from './fflogs/fflogs';
 import { initTwitch, getVideoStartTimestamp, getVideoBroadcaster, getVideoDurationSeconds } from './twitch/twitch';
-import { reminderModalBuilder } from './reminderModalBuilder';
 import { addReminder, fetchAllReminders, removeReminderById, setReminderToUsedById } from './controllers/reminder';
-
+import { ChartJSNodeCanvas } from 'chartjs-node-canvas';
+import { AttachmentBuilder } from 'discord.js';
 // Create a new client instance
 const client = new Client({ partials: [Partials.User, Partials.GuildMember, Partials.Channel, Partials.Message, Partials.Reaction], intents: ['Guilds', 'GuildMessages', 'GuildEmojisAndStickers', 'GuildMessageReactions', 'MessageContent'] });
 
@@ -28,6 +28,12 @@ mongoose.connect(mongoDB);
 const db = mongoose.connection;
 let timezoneListString = '';
 let timezoneListChunks = chunkArray(getTimeZones().map((val) => { return val.name }), 6)
+
+const chartJSNodeCanvas = new ChartJSNodeCanvas({
+  width: 800, height: 600, plugins: {
+    requireLegacy: ['chartjs-plugin-datalabels']
+  }
+});
 
 const ffGql = initFFLogsGQL();
 const twitch = initTwitch();
@@ -78,6 +84,7 @@ const resultDictEmbedBuilder = (resultSet, startTimestamp, url, vods?, timestamp
       value: `[${paddedPercentage}%] ${minutes} minutes and ${seconds} seconds in ${mech.wipes} wipes${vodLinkstring}`
     }
   }))
+  .setImage('attachment://output.png')
   .setFooter({ text: "Log From" })
   .setTimestamp(startTimestamp)
 
@@ -390,6 +397,10 @@ client.on('messageCreate', async (message: Message) => {
     message.channel.sendTyping();
     const { resultSet, timestamps, startTimestamp } = await getTimeSpentPerMech(code.groups.code, await ffGql)
     if (resultSet.length > 0) {
+
+      const image = await createChart(chartJSNodeCanvas, resultSet);
+      const file = new AttachmentBuilder(image, { name: 'output.png' });
+
       const row = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
           new ButtonBuilder()
@@ -397,7 +408,7 @@ client.on('messageCreate', async (message: Message) => {
             .setLabel('Attach a VOD')
             .setStyle(ButtonStyle.Primary),
         );
-      let reply = await message.reply({ embeds: [resultDictEmbedBuilder(resultSet, startTimestamp, code[0])], components: [row] });
+      let reply = await message.reply({ embeds: [resultDictEmbedBuilder(resultSet, startTimestamp, code[0])], components: [row], files: [file] });
 
       fflogsEmbedCache[reply.id] = { message: reply, resultSet: resultSet, timestamps: timestamps, url: code[0], startTimestamp: startTimestamp, vods: [] }
       console.log("reply id =", reply.id)

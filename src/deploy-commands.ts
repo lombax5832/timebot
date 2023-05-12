@@ -1,5 +1,5 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import {PermissionFlagsBits, Routes} from 'discord-api-types/v9'
+import { ContextMenuCommandBuilder, SlashCommandBuilder } from "@discordjs/builders";
+import { ApplicationCommandType, PermissionFlagsBits, Routes } from 'discord-api-types/v10'
 import path from 'path';
 
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
@@ -27,7 +27,8 @@ const commands = [
 	new SlashCommandBuilder().setName('vod-search').setDescription('Use an fflogs filter on a vod to find certain event occurrences')
 		.addStringOption(option => option.setName('fflogs-url').setDescription('Link to fflogs report').setRequired(true))
 		.addStringOption(option => option.setName('twitch-url').setDescription('Link to twitch VOD').setRequired(true))
-		.addStringOption(option => option.setName('filter-string').setDescription('Valid fflogs filter string').setRequired(true))
+		.addStringOption(option => option.setName('filter-string').setDescription('Valid fflogs filter string').setRequired(true)),
+	//new ContextMenuCommandBuilder().setName('Time').setType(ApplicationCommandType.Message)
 ]
 	.map(command => command.toJSON());
 
@@ -40,6 +41,10 @@ const deployCommands = async () => {
 			Routes.applicationCommands(process.env.clientId),
 			{ body: commands },
 		);
+		/*for (const id of ["1106680984738484337"]) {
+
+			await rest.delete(`${Routes.applicationCommands(process.env.clientId)}/${id}`)
+		}*/
 
 		console.log('Successfully registered application commands.');
 	} catch (error) {
