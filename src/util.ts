@@ -41,6 +41,9 @@ export const createChart = async (chart: ChartJSNodeCanvas, resultSet) => {
       plugins: {
         datalabels: {
           color: 'black',
+          font: {
+            family: 'Arial'
+          },
           formatter: function (value, context) {
             return context.chart.data.labels[context.dataIndex];
           }
