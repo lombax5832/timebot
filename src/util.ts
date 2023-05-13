@@ -41,7 +41,9 @@ export const createChart = async (chart: ChartJSNodeCanvas, resultSet) => {
         datalabels: {
           color: 'black',
           font: {
-            family: 'Arial'
+            family: 'Arial',
+            size: 15,
+            weight: 'bold'
           },
           rotation: function (ctx) {
             const valuesBefore = ctx.dataset.data.slice(0, ctx.dataIndex).reduce((a, b) => a + b, 0);
@@ -51,6 +53,9 @@ export const createChart = async (chart: ChartJSNodeCanvas, resultSet) => {
           },
           formatter: function (value, context) {
             return `[${(Math.round(resultSet[context.dataIndex].percentage)).toString()}%] ${context.chart.data.labels[context.dataIndex]}`;
+          },
+          display: function(context) {
+            return (Math.round(resultSet[context.dataIndex].percentage)) >= 4;
           }
         }
       },
