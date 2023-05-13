@@ -27,7 +27,6 @@ export function chunkArray(arr, chunkCount) {
 
 export const createChart = async (chart: ChartJSNodeCanvas, resultSet) => {
   const pal = palette('mpn65', resultSet.length).map(color => '#' + color)
-  console.log("pal", pal)
   const configuration: any = {
     type: 'pie',
     data: {
@@ -44,14 +43,14 @@ export const createChart = async (chart: ChartJSNodeCanvas, resultSet) => {
           font: {
             family: 'Arial'
           },
-          rotation: function(ctx) {
+          rotation: function (ctx) {
             const valuesBefore = ctx.dataset.data.slice(0, ctx.dataIndex).reduce((a, b) => a + b, 0);
             const sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
-            const rotation = ((valuesBefore + ctx.dataset.data[ctx.dataIndex] /2) /sum *360);
-            return rotation < 180 ? rotation-90 : rotation+90;
+            const rotation = ((valuesBefore + ctx.dataset.data[ctx.dataIndex] / 2) / sum * 360);
+            return rotation < 180 ? rotation - 90 : rotation + 90;
           },
           formatter: function (value, context) {
-            return context.chart.data.labels[context.dataIndex];
+            return `[${(Math.round(resultSet[context.dataIndex].percentage)).toString()}%] ${context.chart.data.labels[context.dataIndex]}`;
           }
         }
       },
