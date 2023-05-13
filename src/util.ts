@@ -44,6 +44,12 @@ export const createChart = async (chart: ChartJSNodeCanvas, resultSet) => {
           font: {
             family: 'Arial'
           },
+          rotation: function(ctx) {
+            const valuesBefore = ctx.dataset.data.slice(0, ctx.dataIndex).reduce((a, b) => a + b, 0);
+            const sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
+            const rotation = ((valuesBefore + ctx.dataset.data[ctx.dataIndex] /2) /sum *360);
+            return rotation < 180 ? rotation-90 : rotation+90;
+          },
           formatter: function (value, context) {
             return context.chart.data.labels[context.dataIndex];
           }
