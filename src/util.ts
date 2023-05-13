@@ -31,7 +31,7 @@ export const createChart = async (chart: ChartJSNodeCanvas, resultSet) => {
   const configuration: any = {
     type: 'pie',
     data: {
-      labels: resultSet.map(element => element.name),
+      labels: resultSet.map(element => element.name.replace(/\\/g, '')),
       datasets: [{
         data: resultSet.map(element => element.duration),
         backgroundColor: pal,

@@ -32,7 +32,6 @@
     "discord-api-types": "^0.37.42",
     "discord.js": "^14.10.2",
     "dotenv": "^10.0.0",
-    "font-list": "^1.4.5",
     "google-palette": "^1.1.1",
     "graphql-request": "^4.3.0",
     "luxon": "^1.26.0",

@@ -23,16 +23,6 @@ import { AttachmentBuilder } from 'discord.js';
 // Create a new client instance
 const client = new Client({ partials: [Partials.User, Partials.GuildMember, Partials.Channel, Partials.Message, Partials.Reaction], intents: ['Guilds', 'GuildMessages', 'GuildEmojisAndStickers', 'GuildMessageReactions', 'MessageContent'] });
 
-import { getFonts } from 'font-list'
-
-getFonts()
-  .then(fonts => {
-    console.log(fonts)
-  })
-  .catch(err => {
-    console.log(err)
-  })
-
 const mongoDB = process.env.DB;
 mongoose.connect(mongoDB);
 const db = mongoose.connection;
