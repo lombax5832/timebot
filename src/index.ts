@@ -20,6 +20,7 @@ import { initTwitch, getVideoStartTimestamp, getVideoBroadcaster, getVideoDurati
 import { addReminder, fetchAllReminders, removeReminderById, setReminderToUsedById } from './controllers/reminder';
 import { ChartJSNodeCanvas } from 'chartjs-node-canvas';
 import { AttachmentBuilder } from 'discord.js';
+import { cacheMessage, changeCacheId, getMessage, itemPriceEmbed, lookUpItem, updateMessage } from './tarkov-market';
 // Create a new client instance
 const client = new Client({ partials: [Partials.User, Partials.GuildMember, Partials.Channel, Partials.Message, Partials.Reaction], intents: ['Guilds', 'GuildMessages', 'GuildEmojisAndStickers', 'GuildMessageReactions', 'MessageContent'] });
 
@@ -136,6 +137,26 @@ client.on('interactionCreate', async interaction => {
 
   if (interaction.customId === "addVideo") {
     await interaction.showModal(embedModalBuilder(message.id))
+  }
+  if (interaction.customId === "previousItemPrice") {
+    if (interaction.user.id === getMessage(interaction.message.id)?.owner) {
+      await getMessage(interaction.message.id).message.edit(updateMessage(interaction.message.id, interaction.customId));
+      await interaction.deferUpdate();
+    } else if (!getMessage(interaction.message.id).message) {
+      await interaction.reply({ content: "Message is too old, you should fetch the price again.", ephemeral: true })
+    } else {
+      await interaction.reply({ content: "Only the user that fetched the price originally may change the item.", ephemeral: true })
+    }
+  }
+  if (interaction.customId === "nextItemPrice") {
+    if (interaction.user.id === getMessage(interaction.message.id)?.owner) {
+      await getMessage(interaction.message.id).message.edit(updateMessage(interaction.message.id, interaction.customId));
+      await interaction.deferUpdate();
+    } else if (!getMessage(interaction.message.id).message) {
+      await interaction.reply({ content: "Message is too old, you should fetch the price again.", ephemeral: true })
+    } else {
+      await interaction.reply({ content: "Only the user that fetched the price originally may change the item.", ephemeral: true })
+    }
   }
 });
 
@@ -345,6 +366,38 @@ client.on(Events.InteractionCreate, async interaction => {
       }
     } catch (error) {
       console.log(error)
+    }
+  }
+
+  if (commandName === 'tarkov') {
+    switch (interaction.options.getSubcommand()) {
+      case 'price':
+        const name = interaction.options.getString('name')
+        /*fetchTimezoneByUserID(user.id).then(async val => {
+          if (val.length > 0) {
+            await lookUpItem(await tarkov, name)
+          } else {
+            await interaction.reply({
+              content: `No timezone set!\n
+        Please do so using ${inlineCode('/timezone set <TIMEZONE CODE>')}\nTimezone codes can be found by using ${inlineCode('/timezone list')}')}`, ephemeral: true
+            })
+          }
+          //console.log('Fetched by id:', val)
+        })*/
+
+        lookUpItem(name).then(async itemList => {
+          if (itemList.length === 0) {
+            await interaction.reply({ content: `Item "${name}" not found.`, ephemeral: true })
+          } else {
+            await interaction.reply({ embeds: [itemPriceEmbed(itemList, 0)] }).then(sent => {
+              cacheMessage(sent.id, itemList, 0, interaction.user.id, sent)
+              sent.edit(updateMessage(sent.id)).then(newMessage => {
+                changeCacheId(sent.id, newMessage.id, sent)
+              })
+            })
+          }
+        })
+        break;
     }
   }
 });

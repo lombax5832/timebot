@@ -28,6 +28,9 @@ const commands = [
 		.addStringOption(option => option.setName('fflogs-url').setDescription('Link to fflogs report').setRequired(true))
 		.addStringOption(option => option.setName('twitch-url').setDescription('Link to twitch VOD').setRequired(true))
 		.addStringOption(option => option.setName('filter-string').setDescription('Valid fflogs filter string').setRequired(true)),
+	new SlashCommandBuilder().setName('tarkov').setDescription('Escape From Tarkov commands')
+		.addSubcommand(subcommand => subcommand.setName('price').setDescription('Look up the price of an item from tarkov-market.com')
+			.addStringOption(option => option.setName('name').setDescription('Item Name').setRequired(true)))
 	//new ContextMenuCommandBuilder().setName('Time').setType(ApplicationCommandType.Message)
 ]
 	.map(command => command.toJSON());
