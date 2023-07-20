@@ -43,7 +43,16 @@ const timeline: String[] = [
     "Unlimited Wave Cannon 1",
     "Cosmo Arrow 2",
     "Unlimited Wave Cannon 2",
-    "Cosmo Meteor"
+    "Cosmo Meteor",
+    "Gaiaochos 1",
+    "The Classical Concepts 1",
+    "Caloric Theory 1",
+    "Ekpyrosis 1",
+    "Pangenesis",
+    "The Classical Concepts 2",
+    "Caloric Theory 2",
+    "Ekpyrosis 2",
+    "Gaiaochos 2"
 ]
 
 async function getAccessToken() {
@@ -93,7 +102,7 @@ const initFFLogsGQL = async () => {
 }
 
 const getReportGql = async (ffGql: GraphQLClient, code: string) => {
-    return getReportCustomExpressionGql(ffGql, code, "actor.type = NPC AND MATCHED type = 'cast' AND ability.name in ('Oversampled Wave Cannon') IN (1) END OR type = 'begincast' AND source.class = 'boss' AND ability.name in ('Cosmo Arrow') OR type = 'cast' AND ability.id in (25555,25569,26381,27529,27538,27957,27956,27973,29752,28060,29453,28058,31027,31002,30962,31032,31148,31163,30189,31491,31499,31551,31544,31507,31573,31610,31624,32788,32789,31649,31660,31664)");
+    return getReportCustomExpressionGql(ffGql, code, "actor.type = NPC AND MATCHED type = 'cast' AND ability.name in ('Oversampled Wave Cannon') IN (1) END OR type = 'begincast' AND source.class = 'boss' AND ability.name in ('Cosmo Arrow') OR type = 'cast' AND ability.id in (25555,25569,26381,27529,27538,27957,27956,27973,29752,28060,29453,28058,31027,31002,30962,31032,31148,31163,30189,31491,31499,31551,31544,31507,31573,31610,31624,32788,32789,31649,31660,31664,34719,33597,33598,33585,33566,33599)");
 }
 
 const getReportCustomExpressionGql = async (ffGql: GraphQLClient, code: string, expression: string) => {
@@ -215,6 +224,10 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
             }
             if (reportDict[fight.id].name == "Unlimited Wave Cannon") {
                 reportDict[fight.id].name = "Unlimited Wave Cannon " + (reportDict[fight.id].duration < 970 ? '1' : '2');
+            }
+            //p12s p2 names
+            if (['Gaiaochos', 'The Classical Concepts', 'Caloric Theory', 'Ekpyrosis'].includes(reportDict[fight.id].name)) {
+                reportDict[fight.id].name = reportDict[fight.id].name + (reportDict[fight.id].duration < 250 ? ' 1' : ' 2');
             }
         }
     });
