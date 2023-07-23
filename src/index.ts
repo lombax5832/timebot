@@ -294,12 +294,16 @@ client.on(Events.InteractionCreate, async interaction => {
 
   if (commandName === 'remove-command') {
     console.log(`Guild ID = ${interaction.guildId}`)
+    
+    removeCommand({ serverID: interaction.guildId, command: '.' + interaction.options.getString('command') })
+    interaction.reply({ content: `Command: ${interaction.options.getString('command')} removed`, ephemeral: true })
+    /*
     fetchServerWhitelistByServerID(interaction.guildId).then(async val => {
       if (val != null && val[0].userIDs.includes(interaction.user.id)) {
         removeCommand({ serverID: interaction.guildId, command: '.' + interaction.options.getString('command') })
         interaction.reply({ content: `Command: ${interaction.options.getString('command')} removed`, ephemeral: true })
       }
-    })
+    })*/
   }
 
   if (commandName === 'reminder') {

@@ -19,7 +19,8 @@ const commands = [
 		.addStringOption(option => option.setName('response').setDescription('What to reply with').setRequired(true))
 		.setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
 	new SlashCommandBuilder().setName('remove-command').setDescription('Remove a command')
-		.addStringOption(option => option.setName('command').setDescription('Command to respond to').setRequired(true)),
+		.addStringOption(option => option.setName('command').setDescription('Command to respond to').setRequired(true))
+		.setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
 	new SlashCommandBuilder().setName('reminder').setDescription('Send a reminder in this channel at a specific time to a specific role')
 		.addStringOption(option => option.setName('reminder-time').setDescription('When to send the reminder?').setRequired(true))
 		.addMentionableOption(option => option.setName('mention').setDescription('Who to ping with the reminder?').setRequired(true))
