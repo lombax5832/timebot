@@ -16,7 +16,8 @@ const commands = [
 		.addSubcommand(subcommand => subcommand.setName('list').setDescription('Lists all valid timezones')),
 	new SlashCommandBuilder().setName('add-command').setDescription('Auto-reply to command with given response')
 		.addStringOption(option => option.setName('command').setDescription('Command to respond to').setRequired(true))
-		.addStringOption(option => option.setName('response').setDescription('What to reply with').setRequired(true)),
+		.addStringOption(option => option.setName('response').setDescription('What to reply with').setRequired(true))
+		.setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
 	new SlashCommandBuilder().setName('remove-command').setDescription('Remove a command')
 		.addStringOption(option => option.setName('command').setDescription('Command to respond to').setRequired(true)),
 	new SlashCommandBuilder().setName('reminder').setDescription('Send a reminder in this channel at a specific time to a specific role')

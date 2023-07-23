@@ -266,6 +266,11 @@ client.on(Events.InteractionCreate, async interaction => {
 
   if (commandName === 'add-command') {
     console.log(`Guild ID = ${interaction.guildId}`)
+    
+    addCommand({ serverID: interaction.guildId, command: '.' + interaction.options.getString('command'), response: interaction.options.getString('response') })
+    interaction.reply({ content: `Command: ${interaction.options.getString('command')} added`, ephemeral: true })
+    
+    /*
     let hasRole: boolean = false;
     let users: Array<string> = [];
     fetchServerWhitelistByServerID(interaction.guildId).then(async val => {
@@ -280,12 +285,11 @@ client.on(Events.InteractionCreate, async interaction => {
         console.log("User does not have role!");
       }
       if (val != null && (val[0].userIDs.includes(interaction.user.id) || hasRole)) {
-        addCommand({ serverID: interaction.guildId, command: '.' + interaction.options.getString('command'), response: interaction.options.getString('response') })
-        interaction.reply({ content: `Command: ${interaction.options.getString('command')} added`, ephemeral: true })
+        
       } else {
         interaction.reply({ content: `You do not have permissions to add commands.`, ephemeral: true })
       }
-    })
+    })*/
   }
 
   if (commandName === 'remove-command') {
