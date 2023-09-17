@@ -266,10 +266,10 @@ client.on(Events.InteractionCreate, async interaction => {
 
   if (commandName === 'add-command') {
     console.log(`Guild ID = ${interaction.guildId}`)
-    
+
     addCommand({ serverID: interaction.guildId, command: '.' + interaction.options.getString('command'), response: interaction.options.getString('response') })
     interaction.reply({ content: `Command: ${interaction.options.getString('command')} added`, ephemeral: true })
-    
+
     /*
     let hasRole: boolean = false;
     let users: Array<string> = [];
@@ -294,7 +294,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
   if (commandName === 'remove-command') {
     console.log(`Guild ID = ${interaction.guildId}`)
-    
+
     removeCommand({ serverID: interaction.guildId, command: '.' + interaction.options.getString('command') })
     interaction.reply({ content: `Command: ${interaction.options.getString('command')} removed`, ephemeral: true })
     /*
@@ -413,11 +413,19 @@ client.on(Events.InteractionCreate, async interaction => {
 const twitterEmbedHandler = (message) => {
   const { embeds } = message
   embeds.forEach((embed) => {
-    if (embed.url && embed.video) {
+    if (embed.url) {
       let parsed = new URL(embed.url);
-      if (parsed.hostname == "twitter.com") {
+      switch (parsed.hostname) {
+        case "x.com":
+          parsed.hostname = "twitter.com"
+          break;
+        case "www.tiktok.com":
+          parsed.hostname = "tiktok.com"
+          break;
+      }
+      if ("tiktok.com" == parsed.hostname || (embed.video && ["twitter.com"].includes(parsed.hostname))) {
         try {
-          parsed.hostname = "vxtwitter.com";
+          parsed.hostname = "vx" + parsed.hostname;
           message.react('📹').then(reaction => {
             setTimeout(() => reaction.remove().catch(rejected => {
               console.log(rejected);

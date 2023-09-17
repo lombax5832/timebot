@@ -28,7 +28,7 @@
     "chart.js": "^3.9.1",
     "chartjs-node-canvas": "^4.1.6",
     "chartjs-plugin-datalabels": "^2.2.0",
-    "chrono-node": "^2.3.1",
+    "chrono-node": "^2.6.4",
     "discord-api-types": "^0.37.42",
     "discord.js": "^14.10.2",
     "dotenv": "^10.0.0",
