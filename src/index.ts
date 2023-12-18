@@ -40,6 +40,7 @@ const ffGql = initFFLogsGQL();
 const twitch = initTwitch();
 const ffReportRegex = /fflogs\.com\/reports\/(?<code>[a-zA-Z0-9]{16})/;
 const twitchVidRegex = /twitch.tv\/videos\/(?<code>[0-9]{10})/;
+const urlRegex = /(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])/;
 
 const fflogsEmbedCache = [];
 
@@ -410,56 +411,56 @@ client.on(Events.InteractionCreate, async interaction => {
   }
 });
 
-const twitterEmbedHandler = (message) => {
-  const { embeds } = message
-  embeds.forEach((embed) => {
-    if (embed.url) {
-      let parsed = new URL(embed.url);
-      switch (parsed.hostname) {
-        case "x.com":
-          parsed.hostname = "twitter.com"
-          break;
-        case "www.tiktok.com":
-          parsed.hostname = "tiktok.com"
-          break;
-      }
-      if ("tiktok.com" == parsed.hostname || (embed.video && ["twitter.com"].includes(parsed.hostname))) {
-        try {
-          parsed.hostname = "vx" + parsed.hostname;
-          message.react('📹').then(reaction => {
-            setTimeout(() => reaction.remove().catch(rejected => {
-              console.log(rejected);
-            }), 10000)
-          })
-          const filter = (reaction, user) => reaction.emoji.name === '📹' && user.id !== client.user.id
-          const collector = message.createReactionCollector({ filter, max: 1 })
-          collector.on('collect', () => {
-            message.reply({ content: parsed.href, allowedMentions: { repliedUser: false } })
-            message.reactions.cache.forEach((reaction) => {
-              if (reaction.emoji.name == '📹') {
-                reaction.remove().catch(rejected => {
-                  console.log(rejected);
-                });
-              }
-            })
-            message.suppressEmbeds()
-          })
-        } catch { }
-      }
+const twitterEmbedHandler = (url, message) => {
+  console.log(url);
+  if (url) {
+    let parsed = new URL(url);
+    switch (parsed.hostname) {
+      case "x.com":
+        parsed.hostname = "twitter.com"
+        break;
+      case "www.tiktok.com":
+        parsed.hostname = "tiktok.com"
+        break;
     }
-  })
-}
-
-client.on('messageUpdate', async (oldMessage: Message, message: Message) => {
-  if (oldMessage.embeds.length != message.embeds.length) {
-    twitterEmbedHandler(message)
+    if ("tiktok.com" == parsed.hostname || ["twitter.com"].includes(parsed.hostname)) {
+      try {
+        parsed.hostname = "vx" + parsed.hostname;
+        message.react('📹').then(reaction => {
+          setTimeout(() => reaction.remove().catch(rejected => {
+            console.log(rejected);
+          }), 10000)
+        })
+        const filter = (reaction, user) => reaction.emoji.name === '📹' && user.id !== client.user.id
+        const collector = message.createReactionCollector({ filter, max: 1 })
+        collector.on('collect', () => {
+          message.reply({ content: parsed.href, allowedMentions: { repliedUser: false } })
+          message.reactions.cache.forEach((reaction) => {
+            if (reaction.emoji.name == '📹') {
+              reaction.remove().catch(rejected => {
+                console.log(rejected);
+              });
+            }
+          })
+          message.suppressEmbeds()
+        })
+      } catch { }
+    }
   }
-})
+}
+/*
+client.on('messageUpdate', async (oldMessage: Message, message: Message) => {
+  //twitterEmbedHandler(message)
+})*/
 
 client.on('messageCreate', async (message: Message) => {
   const { content, author, guildId } = message
 
-  twitterEmbedHandler(message)
+  
+  const url = content.match(urlRegex);
+  if(url){
+    twitterEmbedHandler(url[0], message);
+  }
 
   const code = content.match(ffReportRegex);
   if (code?.groups?.code) {
