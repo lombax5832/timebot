@@ -41,7 +41,6 @@ export const createChart = async (chart: ChartJSNodeCanvas, resultSet) => {
         datalabels: {
           color: 'black',
           font: {
-            family: 'Arial',
             size: 15,
             weight: 'bold'
           },
