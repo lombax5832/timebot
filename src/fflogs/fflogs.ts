@@ -52,7 +52,15 @@ const timeline: String[] = [
     "The Classical Concepts 2",
     "Caloric Theory 2",
     "Ekpyrosis 2",
-    "Gaiaochos 2"
+    "Gaiaochos 2",
+    "Cyclonic Break",
+    "Utopian Sky",
+    "Fall of Faith",
+    "Diamond Dust",
+    "Mirror, Mirror",
+    "Light Rampant",
+    "Adds",
+    "Ultimate Relativity"
 ]
 
 async function getAccessToken() {
@@ -102,7 +110,7 @@ const initFFLogsGQL = async () => {
 }
 
 const getReportGql = async (ffGql: GraphQLClient, code: string) => {
-    return getReportCustomExpressionGql(ffGql, code, "actor.type = NPC AND MATCHED type = 'cast' AND ability.name in ('Oversampled Wave Cannon') IN (1) END OR type = 'begincast' AND source.class = 'boss' AND ability.name in ('Cosmo Arrow') OR type = 'cast' AND ability.id in (25555,25569,26381,27529,27538,27957,27956,27973,29752,28060,29453,28058,31027,31002,30962,31032,31148,31163,30189,31491,31499,31551,31544,31507,31573,31610,31624,32788,32789,31649,31660,31664,34719,33597,33598,33585,33566,33599)");
+    return getReportCustomExpressionGql(ffGql, code, "actor.type = NPC AND MATCHED type = 'cast' AND ability.name in ('Oversampled Wave Cannon') IN (1) END OR type = 'begincast' AND source.class = 'boss' AND ability.name in ('Cosmo Arrow') OR type = 'cast' AND ability.id in (25555,25569,26381,27529,27538,27957,27956,27973,29752,28060,29453,28058,31027,31002,30962,31032,31148,31163,30189,31491,31499,31551,31544,31507,31573,31610,31624,32788,32789,31649,31660,31664,34719,33597,33598,33585,33566,33599,40144,40148,40155,40154,40137,40140,40197,40179,40212,40225,40266)");
 }
 
 const getReportCustomExpressionGql = async (ffGql: GraphQLClient, code: string, expression: string) => {
@@ -228,6 +236,16 @@ const getTimeSpentPerMech = async (code: string, ffGql) => {
             //p12s p2 names
             if (['Gaiaochos', 'The Classical Concepts', 'Caloric Theory', 'Ekpyrosis'].includes(reportDict[fight.id].name)) {
                 reportDict[fight.id].name = reportDict[fight.id].name + (reportDict[fight.id].duration < 250 ? ' 1' : ' 2');
+            }
+            //FRU names
+            if (['Cyclonic Break'].includes(reportDict[fight.id].name) && reportDict[fight.id].duration < 30) {
+                reportDict[fight.id].name = reportDict[fight.id].name;
+            }
+            if (["Utopian Sky", "Fall of Faith", "Diamond Dust", "Mirror, Mirror", "Light Rampant", "Ultimate Relativity"].includes(reportDict[fight.id].name)) {
+                reportDict[fight.id].name = reportDict[fight.id].name;
+            }
+            if (["Swelling Frost"].includes(reportDict[fight.id].name)) {
+                reportDict[fight.id].name = "Adds";
             }
         }
     });
